@@ -1,0 +1,26 @@
+{
+  "cpu1x": {
+    "fps": 60,
+    "p95FrameMs": 16.7,
+    "slowFrames": 0,
+    "layoutsPerSec": 72,
+    "styleRecalcsPerSec": 223.4,
+    "scriptMs": 2.6,
+    "styleMs": 34,
+    "layoutMs": 27.6,
+    "otherMs": 80.7,
+    "busyPct": 14.5
+  },
+  "cpu4x": {
+    "fps": 60,
+    "p95FrameMs": 16.8,
+    "slowFrames": 0,
+    "layoutsPerSec": 71.8,
+    "styleRecalcsPerSec": 223,
+    "scriptMs": 7.5,
+    "styleMs": 106.5,
+    "layoutMs": 82,
+    "otherMs": 230.9,
+    "busyPct": 42.6
+  }
+}
