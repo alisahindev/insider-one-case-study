@@ -10,8 +10,6 @@ const title = computed(() => {
   return round ? `Round ${round.number} · ${round.distance}m` : 'Race day'
 })
 
-// Only live facts here; the track notice already says what to do next.
-const isLive = computed(() => race.status === 'racing' || race.status === 'paused')
 // Race time runs RACE_TIME_SCALE× faster than real time, so even tenths would change every
 // frame: unreadable, and each text change costs a layout. Whole seconds tick a few times a second.
 const clock = computed(() => {
@@ -24,7 +22,8 @@ const clock = computed(() => {
   <div class="race-header">
     <div>
       <h2 class="title">{{ title }}</h2>
-      <p v-if="isLive" class="subtitle">
+      <!-- Only live facts here; the track notice already says what to do next. -->
+      <p v-if="race.isLive" class="subtitle">
         {{ race.runners.length }} {{ pluralize(race.runners.length, 'runner') }} · {{ clock }}
       </p>
     </div>

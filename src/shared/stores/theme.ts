@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, watch } from 'vue'
+import { readStorage, writeStorage } from '../storage'
 
 export const THEMES = ['system', 'light', 'dark'] as const
 export type Theme = (typeof THEMES)[number]
@@ -8,12 +9,8 @@ export type Theme = (typeof THEMES)[number]
 const STORAGE_KEY = '1nsider:theme'
 
 function load(): Theme {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY)
-    return THEMES.includes(saved as Theme) ? (saved as Theme) : 'system'
-  } catch {
-    return 'system'
-  }
+  const saved = readStorage(STORAGE_KEY)
+  return THEMES.includes(saved as Theme) ? (saved as Theme) : 'system'
 }
 
 /** Appearance preference. Applies instantly via data-theme on <html>; "system" follows the device. */
@@ -26,11 +23,7 @@ export const useThemeStore = defineStore('theme', () => {
       const root = document.documentElement
       if (value === 'system') delete root.dataset.theme
       else root.dataset.theme = value
-      try {
-        localStorage.setItem(STORAGE_KEY, value)
-      } catch {
-        // The choice still applies for this visit.
-      }
+      writeStorage(STORAGE_KEY, value)
     },
     { immediate: true },
   )

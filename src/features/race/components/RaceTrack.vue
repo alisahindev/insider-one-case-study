@@ -45,10 +45,8 @@ const toGo = computed(() => {
     : `${Math.ceil((distance.value - leader.distance) / 50) * 50}m to go`
 })
 
-const isLive = computed(() => race.status === 'racing' || race.status === 'paused')
-
 function poseOf(place: number | null) {
-  if (place || !isLive.value || race.countdown > 0) return 'stand'
+  if (place || !race.isLive || race.countdown > 0) return 'stand'
   return race.status === 'racing' ? 'gallop' : 'hold'
 }
 
@@ -91,7 +89,7 @@ const summary = computed(() => {
       </ol>
     </div>
 
-    <p v-if="isLive && race.countdown === 0 && toGo" class="chip to-go">{{ toGo }}</p>
+    <p v-if="race.isLive && race.countdown === 0 && toGo" class="chip to-go">{{ toGo }}</p>
     <p v-if="race.status === 'paused'" class="chip paused">Paused</p>
 
     <Transition name="pop" mode="out-in">

@@ -1,7 +1,8 @@
 /*
  * Design tokens, modelled on Airbnb's design language: white surfaces, #222 ink,
  * Rausch for the one primary action, soft shadows, 8/12/16px radii, an 8pt grid.
- * Components read role tokens (--bg-*, --text-*), never palette hex values.
+ * Components read role tokens (--bg-*, --text-*) for anything that changes with the theme;
+ * palette tokens are for brand and turf colours that stay the same in light and dark.
  *
  * Theme: each role holds both values via light-dark(); `color-scheme` picks one.
  * It follows the device by default, and data-theme on <html> overrides it.

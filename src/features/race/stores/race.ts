@@ -84,10 +84,12 @@ export const useRaceStore = defineStore('race', () => {
       )
   })
 
+  /** A round is on the track: running or paused. */
+  const isLive = computed(() => status.value === 'racing' || status.value === 'paused')
+
   function roundState(number: number): RoundState {
     if (number <= results.value.length) return 'done'
-    const isLive = status.value === 'racing' || status.value === 'paused'
-    return isLive && number === currentRound.value?.number ? 'live' : 'upcoming'
+    return isLive.value && number === currentRound.value?.number ? 'live' : 'upcoming'
   }
 
   /** Builds a new stable from settings; a null seed means a fresh random one. */
@@ -177,6 +179,7 @@ export const useRaceStore = defineStore('race', () => {
     placings,
     roundDuration,
     standings,
+    isLive,
     roundState,
     newRaceDay,
     generate,

@@ -35,6 +35,7 @@ Promise.all([document.fonts.ready, stride]).then(() => {
     if (!shared) useTourStore(pinia).startIfNew()
   }
   if (!splash) return ready()
+  // transitionend rather than a timer: it follows the real fade, even under a paused test clock.
   splash.addEventListener('transitionend', ready, { once: true })
   splash.classList.add('splash--done')
 })

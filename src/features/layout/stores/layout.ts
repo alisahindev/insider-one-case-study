@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
+import { readStorage, writeStorage } from '@/shared/storage'
 
 export const PANELS = { stable: 'Stable', program: 'Program', results: 'Results' } as const
 export type PanelId = keyof typeof PANELS
@@ -13,7 +14,7 @@ const DEFAULT_LAYOUT: Layout = { left: ['stable'], right: ['program', 'results']
 /** Saved layouts are untrusted: accept them only if every panel appears exactly once. */
 function load(): Layout {
   try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null') as Layout | null
+    const saved = JSON.parse(readStorage(STORAGE_KEY) ?? 'null') as Layout | null
     const ids = saved ? [...saved.left, ...saved.right].sort() : []
     // Compare element by element: join() would accept one fake id like "program,results,stable".
     if (JSON.stringify(ids) === JSON.stringify(Object.keys(PANELS).sort())) return saved!
@@ -29,17 +30,7 @@ export const useLayoutStore = defineStore('layout', () => {
   const announcement = ref('')
   const isDefault = computed(() => JSON.stringify(columns.value) === JSON.stringify(DEFAULT_LAYOUT))
 
-  watch(
-    columns,
-    (value) => {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(value))
-      } catch {
-        // Layout simply won't survive a reload.
-      }
-    },
-    { deep: true },
-  )
+  watch(columns, (value) => writeStorage(STORAGE_KEY, JSON.stringify(value)), { deep: true })
 
   /** Keyboard alternative to dragging: arrows reorder within a column or switch columns. */
   function move(id: PanelId, direction: Direction) {

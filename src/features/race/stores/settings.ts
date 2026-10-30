@@ -1,14 +1,16 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+import { readStorage, writeStorage } from '@/shared/storage'
 import { DEFAULT_SETTINGS, normalizeSettings, type RaceSettings } from '../domain/settings'
 
 const STORAGE_KEY = '1nsider:settings'
 
-// Storage can be blocked (private mode) or hold stale data; both fall back to defaults.
+// Saved data can be stale or hand-edited; anything unreadable falls back to defaults.
 function load(): RaceSettings {
+  const saved = readStorage(STORAGE_KEY)
+  if (!saved) return DEFAULT_SETTINGS
   try {
-    const saved = localStorage.getItem(STORAGE_KEY)
-    return saved ? normalizeSettings({ ...JSON.parse(saved), seed: null }) : DEFAULT_SETTINGS
+    return normalizeSettings({ ...JSON.parse(saved), seed: null })
   } catch {
     return DEFAULT_SETTINGS
   }
@@ -21,11 +23,7 @@ export const useSettingsStore = defineStore('settings', () => {
 
   function save(next: RaceSettings) {
     settings.value = next
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...next, seed: null }))
-    } catch {
-      // Not persisting is fine; the race day still uses `next`.
-    }
+    writeStorage(STORAGE_KEY, JSON.stringify({ ...next, seed: null }))
   }
 
   return { settings, isSetupOpen, save }

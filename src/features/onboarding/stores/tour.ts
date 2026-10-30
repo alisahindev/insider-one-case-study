@@ -1,16 +1,9 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+import { readStorage, writeStorage } from '@/shared/storage'
 import { TOUR_STEPS } from '../steps'
 
 const STORAGE_KEY = '1nsider:tour-seen'
-
-function hasSeen() {
-  try {
-    return localStorage.getItem(STORAGE_KEY) === '1'
-  } catch {
-    return false
-  }
-}
 
 /** The onboarding tour. `step` is null while the tour is closed. */
 export const useTourStore = defineStore('tour', () => {
@@ -22,7 +15,7 @@ export const useTourStore = defineStore('tour', () => {
 
   /** First visit only; skipping or finishing counts as seen. */
   function startIfNew() {
-    if (!hasSeen()) start()
+    if (readStorage(STORAGE_KEY) !== '1') start()
   }
 
   function next() {
@@ -37,11 +30,7 @@ export const useTourStore = defineStore('tour', () => {
 
   function close() {
     step.value = null
-    try {
-      localStorage.setItem(STORAGE_KEY, '1')
-    } catch {
-      // Without storage the tour may show again next visit; nothing breaks.
-    }
+    writeStorage(STORAGE_KEY, '1')
   }
 
   return { step, start, startIfNew, next, back, close }

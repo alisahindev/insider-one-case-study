@@ -7,7 +7,7 @@ import { useTourStore } from '../stores/tour'
 const PAD = 8 // room around the spotlit element
 const GAP = 14 // between the spotlight and the card
 const EDGE = 16 // the card keeps this far from the viewport edge
-const MOVE_MS = 450 // keep in sync with --tour-move below
+const MOVE_MS = 450 // also feeds the --tour-move CSS transition
 
 interface Box {
   x: number
@@ -158,6 +158,7 @@ onScopeDispose(() => {
     ref="dialog"
     class="tour"
     :class="{ 'is-moving': isMoving, 'is-leaving': isLeaving }"
+    :style="{ '--tour-move': `${MOVE_MS}ms` }"
     aria-labelledby="tour-title"
     @cancel.prevent="tour.close()"
     @keydown.right.prevent="tour.next()"
@@ -207,7 +208,6 @@ onScopeDispose(() => {
 
 <style scoped>
 .tour {
-  --tour-move: 450ms;
   position: fixed;
   inset: 0;
   width: 100%;
