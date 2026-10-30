@@ -15,7 +15,8 @@ function load(): Layout {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null') as Layout | null
     const ids = saved ? [...saved.left, ...saved.right].sort() : []
-    if (ids.join() === Object.keys(PANELS).sort().join()) return saved!
+    // Compare element by element: join() would accept one fake id like "program,results,stable".
+    if (JSON.stringify(ids) === JSON.stringify(Object.keys(PANELS).sort())) return saved!
   } catch {
     // Fall through to the default layout.
   }

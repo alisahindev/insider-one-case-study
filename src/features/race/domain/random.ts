@@ -29,7 +29,7 @@ export function randomBetween(rng: Rng, min: number, max: number): number {
 /** Picks `count` distinct items with a partial Fisher–Yates shuffle. */
 export function sample<T>(rng: Rng, items: readonly T[], count: number): T[] {
   const pool = [...items]
-  const n = Math.min(count, pool.length)
+  const n = Math.max(0, Math.min(count, pool.length))
   for (let i = 0; i < n; i++) {
     const j = randomInt(rng, i, pool.length - 1)
     ;[pool[i], pool[j]] = [pool[j]!, pool[i]!]

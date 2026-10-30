@@ -72,6 +72,7 @@ export function fromQuery(params: URLSearchParams): RaceSettings | null {
     seed: params.get('seed'),
     horseCount: params.get('horses') ?? undefined,
     horsesPerRound: params.get('perRound') ?? undefined,
-    distances: params.get('distances')?.split(','),
+    // An empty `distances=` means "not given", like the other params, so it falls back to six rounds.
+    distances: params.get('distances')?.split(',').filter(Boolean),
   })
 }

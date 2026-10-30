@@ -11,7 +11,8 @@ export function useRaceLoop() {
   let last = 0
 
   function loop(now: number) {
-    race.tick(Math.min((now - last) / 1000, MAX_STEP_SECONDS))
+    // The first frame can be stamped slightly before the performance.now() read below; never step back.
+    race.tick(Math.max(0, Math.min((now - last) / 1000, MAX_STEP_SECONDS)))
     last = now
     frame = requestAnimationFrame(loop)
   }
