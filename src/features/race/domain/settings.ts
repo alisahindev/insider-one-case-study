@@ -22,8 +22,15 @@ export const DEFAULT_SETTINGS: RaceSettings = {
 }
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
-const toInt = (value: unknown, fallback: number) =>
-  Number.isFinite(Number(value)) ? Math.round(Number(value)) : fallback
+// Only numbers and numeric strings count: Number(null), Number('') and Number([]) are all 0,
+// which would turn a missing seed into seed 0 and replay the same day forever.
+const toInt = (value: unknown, fallback: number) => {
+  if (typeof value !== 'number' && (typeof value !== 'string' || value.trim() === '')) {
+    return fallback
+  }
+  const number = Number(value)
+  return Number.isFinite(number) ? Math.round(number) : fallback
+}
 
 /**
  * Turns untrusted input (URL, localStorage, form state) into valid settings:
