@@ -53,18 +53,18 @@ describe('SetupDialog', () => {
       expect(wrapper.get('#setup-title').text()).toBe('New race day')
     })
 
-    it('fills the form from the saved settings', async () => {
-      localStorage.setItem(
-        '1nsider:settings',
-        JSON.stringify({
+    it('fills the form from the race day on screen, not only the saved choices', async () => {
+      // A deep link can open a day that differs from what was saved last time.
+      localStorage.setItem('1nsider:settings', JSON.stringify({ horseCount: 20 }))
+      const { wrapper } = await openSetup(SetupDialog, {
+        settings: {
           horseCount: 8,
           horsesPerRound: 4,
           distances: [1000, 1600],
           countdown: false,
           speed: 2,
-        }),
-      )
-      const { wrapper } = await openSetup(SetupDialog)
+        },
+      })
       expect(value(wrapper, 'horses')).toBe('8')
       expect(value(wrapper, 'horses per round')).toBe('4')
       expect(value(wrapper, 'rounds')).toBe('2')
@@ -83,12 +83,30 @@ describe('SetupDialog', () => {
 
     it('closes on a backdrop click but not on a click inside the form', async () => {
       const { wrapper, setup, dialog } = await openSetup(SetupDialog)
+      await wrapper.get('#setup-title').trigger('pointerdown')
       await wrapper.get('#setup-title').trigger('click')
       expect(setup.isSetupOpen).toBe(true)
 
+      await dialog.trigger('pointerdown')
       await dialog.trigger('click')
       expect(setup.isSetupOpen).toBe(false)
       expect((dialog.element as HTMLDialogElement).open).toBe(false)
+    })
+
+    it('stays open when a press starts inside the form and ends on the backdrop', async () => {
+      // e.g. selecting the seed text and letting go outside the box
+      const { setup, dialog, seed } = await openSetup(SetupDialog)
+      await seed.trigger('pointerdown')
+      await dialog.trigger('click')
+      expect(setup.isSetupOpen).toBe(true)
+    })
+
+    it('pauses a running race while it is open', async () => {
+      const { race } = mountWithRace(SetupDialog)
+      race.start()
+      useSettingsStore().isSetupOpen = true
+      await nextTick()
+      expect(race.status).toBe('paused')
     })
 
     it('syncs the store when the browser closes it (Esc)', async () => {
@@ -290,6 +308,18 @@ describe('SetupDialog', () => {
       expect(esc.defaultPrevented).toBe(true)
       expect(reachedDialog).not.toHaveBeenCalled()
       expect(setup.isSetupOpen).toBe(true)
+    })
+
+    it('lets Esc through to the dialog when the tip is already closed', async () => {
+      const { tip, dialog } = await openSetup(SetupDialog)
+      const reachedDialog = vi.fn<(event: Event) => void>()
+      dialog.element.addEventListener('keydown', reachedDialog)
+
+      const esc = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })
+      tip.element.dispatchEvent(esc)
+
+      expect(esc.defaultPrevented).toBe(false)
+      expect(reachedDialog).toHaveBeenCalled()
     })
   })
 

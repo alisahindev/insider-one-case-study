@@ -19,11 +19,31 @@ const draft = ref(copy(DEFAULT_SETTINGS))
 const seedInput = ref('')
 const isSeedHelpOpen = ref(false)
 
+// Start from the day on screen (a deep link can differ from the saved choices),
+// and hold a running race so no round finishes unseen behind the dialog.
 function open() {
-  draft.value = copy(setup.settings)
+  draft.value = copy(race.settings)
   seedInput.value = ''
   isSeedHelpOpen.value = false
+  race.pause()
   dialog.value?.showModal()
+}
+
+// Esc closes an open tip first; with the tip closed it falls through and closes the dialog.
+function closeSeedHelp(event: KeyboardEvent) {
+  if (!isSeedHelpOpen.value) return
+  event.preventDefault()
+  event.stopPropagation()
+  isSeedHelpOpen.value = false
+}
+
+// Only a press that starts on the backdrop closes the dialog; a text selection
+// that starts inside the box and ends outside it must not throw the edits away.
+let pressedBackdrop = false
+const onPointerDown = (event: PointerEvent) =>
+  (pressedBackdrop = event.target === event.currentTarget)
+function onBackdropClick() {
+  if (pressedBackdrop) setup.isSetupOpen = false
 }
 
 watch(
@@ -70,9 +90,10 @@ function create() {
     class="setup"
     aria-labelledby="setup-title"
     @close="setup.isSetupOpen = false"
-    @click.self="setup.isSetupOpen = false"
+    @pointerdown="onPointerDown"
+    @click.self="onBackdropClick"
   >
-    <form method="dialog" @submit.prevent="create">
+    <form @submit.prevent="create">
       <header class="setup__header">
         <button type="button" class="close" aria-label="Close" @click="setup.isSetupOpen = false">
           <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
@@ -192,7 +213,7 @@ function create() {
                   aria-controls="seed-help"
                   @click="isSeedHelpOpen = !isSeedHelpOpen"
                   @blur="isSeedHelpOpen = false"
-                  @keydown.esc.stop.prevent="isSeedHelpOpen = false"
+                  @keydown.esc="closeSeedHelp"
                 >
                   <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
                     <circle
