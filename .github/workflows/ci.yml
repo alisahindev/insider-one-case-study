@@ -32,22 +32,27 @@ jobs:
         run: npm run build-only
 
   e2e:
-    name: E2E, accessibility and visual tests
+    name: E2E (${{ matrix.project }})
     runs-on: ubuntu-latest
+    # One job per browser, in parallel: Chrome desktop and phone, Firefox, Safari desktop and iPhone.
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [desktop, mobile, firefox, safari, mobile-safari]
     # The same image the Linux visual baselines come from, so screenshots compare pixel for pixel.
     container:
       image: mcr.microsoft.com/playwright:v1.64.1-noble
       options: --ipc=host
     env:
-      HOME: /root
+      HOME: /root # Firefox refuses to start as root without it
     steps:
       - uses: actions/checkout@v7
       - run: npm ci
-      - run: npx playwright test
+      - run: npx playwright test --project=${{ matrix.project }}
       - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.project }}
           path: playwright-report/
           retention-days: 14
 

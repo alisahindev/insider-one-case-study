@@ -49,9 +49,16 @@ async function drag(page: Page, from: Locator, to: Locator, touch: boolean) {
     await touchEvent('touchEnd')
     return
   }
+  // Human pace: SortableJS's Safari path checks what is under the pointer only every 50 ms.
+  /* eslint-disable playwright/no-wait-for-timeout -- pacing a real drag, not waiting for a state */
   await page.mouse.move(path[0]!.x, path[0]!.y)
   await page.mouse.down()
-  for (const point of path.slice(1)) await page.mouse.move(point.x, point.y)
+  for (const point of path.slice(1)) {
+    await page.mouse.move(point.x, point.y)
+    await page.waitForTimeout(16)
+  }
+  await page.waitForTimeout(120)
+  /* eslint-enable playwright/no-wait-for-timeout */
   await page.mouse.up()
 }
 
@@ -68,7 +75,10 @@ test('panels start in their default columns with no Reset layout button', async 
 test('drag a panel by its handle into the other column; it stays there after a reload', async ({
   page,
   isMobile,
+  browserName,
 }) => {
+  // eslint-disable-next-line playwright/no-skipped-test -- not an app limit: Playwright can't touch-drag in WebKit
+  test.skip(browserName === 'webkit' && isMobile, 'WebKit cannot synthesise touch drags')
   await drag(page, handle(page, 'Stable'), ui(page).results, isMobile)
   await expect
     .poll(() => columns(page))

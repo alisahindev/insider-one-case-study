@@ -25,6 +25,19 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
     },
     { name: 'mobile', use: { ...devices['Pixel 7'] } },
+    // Firefox and Safari run every functional and a11y test. Screenshots differ per engine,
+    // so of these only mobile Safari, the phone engine furthest from Chrome, keeps baselines.
+    {
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'], viewport: { width: 1440, height: 900 } },
+      testIgnore: /visual\.spec\.ts/,
+    },
+    {
+      name: 'safari',
+      use: { ...devices['Desktop Safari'], viewport: { width: 1440, height: 900 } },
+      testIgnore: /visual\.spec\.ts/,
+    },
+    { name: 'mobile-safari', use: { ...devices['iPhone 15'] } },
   ],
   // Test the production build, as users get it (no dev overlays, minified output).
   webServer: {

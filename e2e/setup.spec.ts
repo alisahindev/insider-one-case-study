@@ -255,7 +255,11 @@ test.describe('setup dialog', () => {
 })
 
 test.describe('setup dialog at a short viewport', () => {
-  test('only the dialog body scrolls; header and footer stay in view', async ({ page }) => {
+  test('only the dialog body scrolls; header and footer stay in view', async ({
+    page,
+    isMobile,
+    browserName,
+  }) => {
     await page.setViewportSize({ width: page.viewportSize()!.width, height: 480 })
     await visit(page)
     const dialog = await openSetup(page)
@@ -264,8 +268,13 @@ test.describe('setup dialog at a short viewport', () => {
     const pageScroll = await page.evaluate(() => scrollY)
 
     expect(await body.evaluate((el) => el.scrollHeight > el.clientHeight)).toBe(true)
-    await body.hover()
-    await page.mouse.wheel(0, 4_000)
+    if (browserName === 'webkit' && isMobile) {
+      await body.evaluate((el) => el.scrollTo(0, el.scrollHeight)) // mobile WebKit has no wheel
+    } else {
+      await body.hover()
+      // Several notches: Firefox caps how far a single wheel event scrolls.
+      for (let i = 0; i < 8; i++) await page.mouse.wheel(0, 500)
+    }
     await expect(dialog.getByRole('textbox', { name: 'Seed' })).toBeInViewport() // scrolled to the end
     await expect(dialog.getByRole('heading', { name: 'New race day' })).toBeInViewport()
     await expect(dialog.getByRole('button', { name: 'Close' })).toBeInViewport()
