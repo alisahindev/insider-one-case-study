@@ -104,6 +104,7 @@ Each horse's speed is a function of time: a base pace from its condition, a ±4%
 ```bash
 npm run test:unit        # Vitest, watch mode
 npm run test:coverage    # Vitest with coverage
+npx playwright install   # once per machine: the Chromium, Firefox and WebKit builds the E2E tests use
 npm run test:e2e         # Playwright in Chrome, Firefox and Safari, against the production build
 ```
 
