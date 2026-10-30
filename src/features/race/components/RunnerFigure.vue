@@ -3,67 +3,62 @@ import { computed } from 'vue'
 import type { Horse } from '../domain/types'
 import { contrastColor } from '../utils/format'
 
-// Kept as its own component so the horse artwork can be swapped without touching the track.
-const { horse, number, running } = defineProps<{ horse: Horse; number: number; running: boolean }>()
-const trim = computed(() => contrastColor(horse.color.hex))
+/**
+ * Eadweard Muybridge's 1878 "Horse in Motion" frames (public domain), painted in the horse's
+ * colour through a CSS mask. Kept as its own component so the artwork can change on its own.
+ */
+const { horse, pose } = defineProps<{ horse: Horse; pose: 'stand' | 'gallop' | 'hold' }>()
+const outline = computed(() => contrastColor(horse.color.hex))
 </script>
 
 <template>
-  <svg class="figure" :class="{ running }" viewBox="0 0 64 40" aria-hidden="true">
-    <g fill="#EFEBDD" stroke="rgb(20 33 26 / 0.35)" stroke-width="0.5">
-      <ellipse cx="28" cy="22" rx="15" ry="6.5" />
-      <path d="M39 19 L48 9 L54 8 L58 11 L56 13 L50 13 L44 22Z" />
-      <path d="M14 20 L4 16 L6 19 L13 23Z" />
-      <path d="M18 25 L10 34 L12 35 L21 27Z" />
-      <path d="M22 26 L20 37 L22.5 37 L25 27Z" />
-      <path d="M34 26 L42 35 L44 34 L37 25Z" />
-      <path d="M38 25 L48 31 L49 29 L40 23Z" />
-    </g>
-    <rect
-      x="23"
-      y="17"
-      width="10"
-      height="7"
-      rx="1"
-      :fill="horse.color.hex"
-      :stroke="trim"
-      stroke-width="0.8"
-    />
-    <text x="28" y="22.6" font-size="5.5" font-weight="800" text-anchor="middle" :fill="trim">
-      {{ number }}
-    </text>
-    <path
-      d="M27 16 L30 7 L35 6 L36 9 L33 15Z"
-      :fill="horse.color.hex"
-      stroke="rgb(20 33 26 / 0.4)"
-      stroke-width="0.6"
-    />
-    <circle
-      cx="34"
-      cy="4.5"
-      r="3"
-      :fill="horse.color.hex"
-      stroke="rgb(20 33 26 / 0.4)"
-      stroke-width="0.6"
-    />
-  </svg>
+  <span
+    class="figure"
+    :class="`figure--${pose}`"
+    :style="{ '--coat': horse.color.hex, '--outline': outline }"
+    aria-hidden="true"
+  >
+    <span class="sprite" />
+  </span>
 </template>
 
 <style scoped>
 .figure {
-  display: block;
+  position: absolute;
+  right: 100%;
   width: var(--figure-width);
-  height: auto;
-  overflow: visible;
+  aspect-ratio: 184 / 116;
+  overflow: hidden;
+  /* An outline in the contrast colour keeps every coat readable on the turf. */
+  filter: drop-shadow(0 0 0.6px var(--outline)) drop-shadow(0 0 0.6px var(--outline));
 }
 
-.running {
-  animation: gallop 0.36s ease-in-out infinite alternate;
+.sprite {
+  display: block;
+  height: 100%;
+  background: var(--coat);
+  mask: url('@/assets/horse-gallop.png') 0 0 / 100% 100% no-repeat;
 }
 
+.figure--gallop .sprite,
+.figure--hold .sprite {
+  width: 1100%; /* 11 frames side by side */
+  animation: gallop calc(0.5s / var(--speed, 1)) steps(11) infinite;
+}
+
+.figure--hold .sprite {
+  animation-play-state: paused;
+}
+
+.figure--stand .sprite {
+  width: 100%;
+  mask-image: url('@/assets/horse-stand.png');
+}
+
+/* Moving the strip with transform keeps the frame swap on the compositor. */
 @keyframes gallop {
   to {
-    transform: translateY(-2px) rotate(-1.5deg);
+    transform: translateX(-100%);
   }
 }
 </style>

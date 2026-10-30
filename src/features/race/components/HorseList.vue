@@ -1,20 +1,26 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import PanelHeader from '@/features/layout/components/PanelHeader.vue'
 import { useRaceStore } from '../stores/race'
 import SilkIcon from './SilkIcon.vue'
 
 const race = useRaceStore()
-const runningIds = computed(() => new Set(race.currentRound?.horseIds))
-const hasLiveRound = computed(() => race.status === 'racing' || race.status === 'paused')
+// The round at the gate or running; none before a program or after the last round.
+const field = computed(() =>
+  race.status === 'idle' || race.status === 'finished' ? null : new Set(race.currentRound?.horseIds),
+)
+// Runners first. Sort is stable, so each group keeps stable-number order.
+const rows = computed(() => {
+  const ids = field.value
+  return ids ? [...race.horses].sort((a, b) => +ids.has(b.id) - +ids.has(a.id)) : race.horses
+})
 </script>
 
 <template>
   <section class="panel" aria-labelledby="stable-title">
-    <h2 id="stable-title" class="panel__title">
-      Stable <small>{{ race.horses.length }} horses</small>
-    </h2>
+    <PanelHeader panel-id="stable">{{ race.horses.length }} horses</PanelHeader>
     <!-- Focusable so keyboard users can scroll the list too. -->
-    <div class="scroll" tabindex="0" aria-labelledby="stable-title">
+    <div class="panel__body" tabindex="0" aria-labelledby="stable-title">
       <table class="horses">
         <thead>
           <tr>
@@ -22,11 +28,11 @@ const hasLiveRound = computed(() => race.status === 'racing' || race.status === 
             <th scope="col">Condition</th>
           </tr>
         </thead>
-        <tbody>
+        <TransitionGroup tag="tbody" name="reorder">
           <tr
-            v-for="horse in race.horses"
+            v-for="horse in rows"
             :key="horse.id"
-            :class="{ resting: hasLiveRound && !runningIds.has(horse.id) }"
+            :class="{ resting: field && !field.has(horse.id) }"
           >
             <td>
               <div class="horse">
@@ -51,18 +57,13 @@ const hasLiveRound = computed(() => race.status === 'racing' || race.status === 
               </div>
             </td>
           </tr>
-        </tbody>
+        </TransitionGroup>
       </table>
     </div>
   </section>
 </template>
 
 <style scoped>
-.scroll {
-  overflow: auto;
-  min-height: 0;
-}
-
 .horses {
   width: 100%;
   border-collapse: collapse;
@@ -82,7 +83,11 @@ th {
 
 td {
   padding: 7px var(--space-4);
-  border-top: 1px solid var(--bg-subtle);
+  border-top: 1px solid var(--border-soft);
+}
+
+.reorder-move {
+  transition: transform 300ms var(--ease-out);
 }
 
 /* Resting horses fade their silk and soften their text, but text stays above AA contrast. */
@@ -103,7 +108,6 @@ td {
 
 .name {
   font-weight: 600;
-  font-stretch: 90%;
 }
 
 .meta {
@@ -124,22 +128,22 @@ meter {
   height: 4px;
   appearance: none;
   border-radius: 2px;
-  background: var(--bg-subtle);
+  background: var(--border-soft);
 }
 
 meter::-webkit-meter-bar {
   border: 0;
   border-radius: 2px;
-  background: var(--bg-subtle);
+  background: var(--border-soft);
 }
 
 meter::-webkit-meter-optimum-value {
   border-radius: 2px;
-  background: var(--accent);
+  background: var(--text);
 }
 
 meter::-moz-meter-bar {
   border-radius: 2px;
-  background: var(--accent);
+  background: var(--text);
 }
 </style>

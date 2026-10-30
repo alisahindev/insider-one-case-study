@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRaceStore } from '../stores/race'
+import { useSettingsStore } from '../stores/settings'
 import RunnerFigure from './RunnerFigure.vue'
 
 const race = useRaceStore()
+const setup = useSettingsStore()
 
 const distance = computed(() => race.currentRound?.distance ?? 0)
+const laneCount = computed(() => race.settings.horsesPerRound)
 
 /** One lane per entrant in gate order, with track position (0–1) and finishing place. */
 const lanes = computed(() => {
@@ -32,18 +35,30 @@ const poles = computed(() => {
   return marks
 })
 
+// In 50m steps, so the chip's text (and the layout it costs) changes a few times a second, not every frame.
 const toGo = computed(() => {
   const leader = race.standings[0]
   if (!leader) return null
-  return leader.finished ? 'Finish' : `${Math.ceil(distance.value - leader.distance)}m to go`
+  return leader.finished ? 'Finish' : `${Math.ceil((distance.value - leader.distance) / 50) * 50}m to go`
 })
 
-const isRunning = computed(() => race.status === 'racing' && race.countdown === 0)
 const isLive = computed(() => race.status === 'racing' || race.status === 'paused')
+
+function poseOf(place: number | null) {
+  if (place || !isLive.value || race.countdown > 0) return 'stand'
+  return race.status === 'racing' ? 'gallop' : 'hold'
+}
+
+const summary = computed(() => {
+  const { horseCount, horsesPerRound, distances } = race.settings
+  const rounds = distances.length === 1 ? 'one round' : `${distances.length} rounds`
+  const [first, last] = [distances[0], distances[distances.length - 1]]
+  return { horseCount, horsesPerRound, rounds, first, last }
+})
 </script>
 
 <template>
-  <div class="track">
+  <div class="track" :style="{ '--lanes': Math.max(laneCount, 1), '--speed': race.speed }">
     <div class="course" aria-hidden="true">
       <div v-for="pole in poles" :key="pole.toGo" class="pole" :style="{ '--at': pole.position }">
         <span>{{ pole.toGo }}m</span>
@@ -52,14 +67,10 @@ const isLive = computed(() => race.status === 'racing' || race.status === 'pause
       <ol class="lanes">
         <li v-for="lane in lanes" :key="lane.horse.id" class="lane">
           <span class="gate">{{ lane.gate }}</span>
-          <div class="run" :style="{ '--progress': lane.progress, '--silk': lane.horse.color.hex }">
-            <span class="trail" />
-            <div class="runner">
-              <RunnerFigure
-                :horse="lane.horse"
-                :number="lane.gate"
-                :running="isRunning && !lane.place"
-              />
+          <div class="run" :style="{ '--coat': lane.horse.color.hex }">
+            <span class="trail" :style="{ '--progress': lane.progress }" />
+            <div class="runner" :style="{ '--progress': lane.progress }">
+              <RunnerFigure :horse="lane.horse" :pose="poseOf(lane.place)" />
               <span class="tag" :class="{ winner: lane.place === 1 }">
                 <template v-if="lane.place">{{ lane.place }}. </template>{{ lane.horse.name }}
               </span>
@@ -69,8 +80,8 @@ const isLive = computed(() => race.status === 'racing' || race.status === 'pause
       </ol>
     </div>
 
-    <p v-if="isLive && race.countdown === 0 && toGo" class="to-go">{{ toGo }}</p>
-    <p v-if="race.status === 'paused'" class="paused">Paused</p>
+    <p v-if="isLive && race.countdown === 0 && toGo" class="chip to-go">{{ toGo }}</p>
+    <p v-if="race.status === 'paused'" class="chip paused">Paused</p>
 
     <Transition name="pop" mode="out-in">
       <p
@@ -82,21 +93,32 @@ const isLive = computed(() => race.status === 'racing' || race.status === 'pause
       </p>
       <div v-else-if="race.status === 'idle'" class="notice">
         <h3>Set the field</h3>
-        <p>Draw 10 of the 20 horses for each of the six rounds.</p>
-        <button type="button" class="btn btn--primary" @click="race.generate()">
-          Generate program
-        </button>
+        <p>
+          Draw {{ summary.horsesPerRound }} of your {{ summary.horseCount }} horses for each of the
+          {{ summary.rounds }}.
+        </p>
+        <div class="notice__actions">
+          <button type="button" class="btn btn--primary" @click="race.generate()">
+            Generate program
+          </button>
+          <button type="button" class="btn" @click="setup.isSetupOpen = true">Race settings</button>
+        </div>
       </div>
       <div v-else-if="race.status === 'ready'" class="notice">
         <h3>Round 1 is at the gate</h3>
-        <p>Six rounds from 1200m to 2200m, run back to back.</p>
-        <button type="button" class="btn btn--primary" @click="race.start()">
-          Start the races
-        </button>
+        <p>
+          {{ summary.rounds }} from {{ summary.first }}m to {{ summary.last }}m, run back to back.
+        </p>
+        <div class="notice__actions">
+          <button type="button" class="btn btn--primary" @click="race.start()">
+            Start the races
+          </button>
+          <button type="button" class="btn" @click="setup.isSetupOpen = true">Race settings</button>
+        </div>
       </div>
       <div v-else-if="race.status === 'finished'" class="notice">
         <h3>Race day complete</h3>
-        <p>All six results are in. Run a new program with the same stable.</p>
+        <p>Every result is in. Run a new program with the same stable.</p>
         <button type="button" class="btn btn--primary" @click="race.start()">Race again</button>
       </div>
     </Transition>
@@ -105,30 +127,32 @@ const isLive = computed(() => race.status === 'racing' || race.status === 'pause
 
 <style scoped>
 .track {
-  --gate-width: 40px;
-  --figure-width: clamp(52px, 6vw, 92px);
-  --runoff: clamp(72px, 9vw, 120px);
+  --gate-width: 36px;
+  --runoff: clamp(80px, 9vw, 120px);
+  /* Horses scale with lane height, so 1 lane or 20 lanes both fit. */
+  --figure-width: clamp(34px, calc((100cqh - 16px) / var(--lanes) * 1.35), 96px);
 
   position: relative;
-  display: grid;
-  min-height: 0;
+  container-type: size;
+  min-height: calc(var(--lanes) * 30px + 16px);
   overflow: hidden;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   background: repeating-linear-gradient(
     90deg,
-    var(--color-turf) 0 80px,
-    var(--color-turf-stripe) 80px 160px
+    var(--color-turf) 0 72px,
+    var(--color-turf-stripe) 72px 144px
   );
   color: var(--color-rail);
 }
 
 .course {
-  position: relative;
+  position: absolute;
+  inset: 0;
   display: flex;
   padding: var(--space-2) 0;
 }
 
-/* The finish line sits where the runoff starts; poles are placed along the same span. */
+/* The finish line sits where the runoff starts; poles share the same span. */
 .pole,
 .finish-post {
   position: absolute;
@@ -141,24 +165,23 @@ const isLive = computed(() => race.status === 'racing' || race.status === 'pause
     var(--gate-width) + var(--figure-width) +
       (100% - var(--gate-width) - var(--figure-width) - var(--runoff)) * var(--at)
   );
-  width: 2px;
-  background: rgb(247 247 242 / 0.3);
+  width: 1px;
+  background: rgb(255 255 255 / 0.35);
 }
 
 .pole span {
   position: absolute;
-  top: 4px;
+  top: 6px;
   left: 6px;
   font-size: var(--text-xs);
-  font-weight: 700;
-  font-stretch: var(--stretch-condensed);
-  opacity: 0.75;
+  font-weight: 600;
+  opacity: 0.85;
 }
 
 .finish-post {
   right: calc(var(--runoff) - 8px);
   width: 8px;
-  background: repeating-linear-gradient(0deg, var(--color-rail) 0 8px, var(--color-board) 8px 16px);
+  background: repeating-linear-gradient(0deg, #ffffff 0 8px, var(--color-ink) 8px 16px);
 }
 
 .lanes {
@@ -170,8 +193,7 @@ const isLive = computed(() => race.status === 'racing' || race.status === 'pause
 .lane {
   display: flex;
   flex: 1;
-  min-height: 34px;
-  border-bottom: 1px dashed rgb(247 247 242 / 0.18);
+  border-bottom: 1px dashed rgb(255 255 255 / 0.2);
 }
 
 .lane:last-child {
@@ -182,10 +204,10 @@ const isLive = computed(() => race.status === 'racing' || race.status === 'pause
   display: grid;
   place-items: center;
   width: var(--gate-width);
-  border-right: 2px solid var(--color-rail);
-  background: rgb(0 0 0 / 0.18);
-  font-weight: 800;
-  font-stretch: var(--stretch-condensed);
+  border-right: 2px solid #ffffff;
+  background: rgb(0 0 0 / 0.12);
+  font-size: var(--text-xs);
+  font-weight: 700;
 }
 
 .run {
@@ -195,18 +217,27 @@ const isLive = computed(() => race.status === 'racing' || race.status === 'pause
   margin-right: var(--runoff);
 }
 
-/* Movement uses transforms only, so each frame skips layout and paint. */
+/*
+ * Movement uses transforms only, so each frame skips layout and paint.
+ * --progress is not inherited and set on the two elements that read it,
+ * so a frame restyles those two instead of every element inside the runner.
+ */
+@property --progress {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
+
 .trail {
   position: absolute;
-  top: 50%;
+  top: 60%;
   left: 0;
   width: 100%;
   height: 3px;
-  margin-top: -1.5px;
   transform: scaleX(var(--progress));
   transform-origin: left;
-  background: linear-gradient(90deg, transparent, var(--silk));
-  opacity: 0.6;
+  background: linear-gradient(90deg, transparent, var(--coat));
+  opacity: 0.55;
 }
 
 .runner {
@@ -218,48 +249,38 @@ const isLive = computed(() => race.status === 'racing' || race.status === 'pause
   will-change: transform;
 }
 
-.runner :deep(.figure) {
-  position: absolute;
-  right: 100%;
-}
-
+/* Name pins, styled like Airbnb's map price markers. */
 .tag {
   margin-left: 6px;
-  padding: 1px 6px;
-  border-radius: 4px;
-  background: rgb(20 33 26 / 0.6);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-pill);
+  background: #ffffff;
+  box-shadow: var(--shadow-sm);
   font-size: var(--text-xs);
   font-weight: 700;
-  font-stretch: var(--stretch-condensed);
+  color: var(--color-ink);
   white-space: nowrap;
 }
 
-@media (max-width: 640px) {
-  .pole span {
-    display: none;
-  }
-}
-
 .tag.winner {
-  background: var(--color-brass);
-  color: var(--color-board);
+  background: var(--color-ink);
+  color: #ffffff;
 }
 
-.to-go,
-.paused {
+.chip {
   position: absolute;
   top: var(--space-3);
-  padding: 6px 10px;
-  border-radius: var(--radius-sm);
-  background: var(--color-board);
-  font-weight: 800;
-  font-stretch: 110%;
+  padding: 6px var(--space-3);
+  border-radius: var(--radius-pill);
+  background: #ffffff;
+  box-shadow: var(--shadow-md);
   font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--color-ink);
 }
 
 .to-go {
   right: var(--space-3);
-  color: var(--color-brass);
 }
 
 .paused {
@@ -276,39 +297,39 @@ const isLive = computed(() => race.status === 'racing' || race.status === 'pause
 .countdown {
   width: fit-content;
   height: fit-content;
-  font-size: clamp(4rem, 10vw, 8rem);
+  font-size: clamp(4rem, 10vw, 7rem);
   font-weight: 800;
-  font-stretch: var(--stretch-wide);
   line-height: 1;
-  color: var(--color-brass);
-  text-shadow: 0 4px 24px rgb(0 0 0 / 0.35);
+  text-shadow: 0 4px 24px rgb(0 0 0 / 0.3);
 }
 
 .notice {
   display: grid;
   justify-items: start;
   gap: var(--space-2);
-  width: min(360px, calc(100% - 2 * var(--space-4)));
+  width: min(380px, calc(100% - 2 * var(--space-4)));
   height: fit-content;
   padding: var(--space-5);
   border-radius: var(--radius-md);
-  background: var(--color-board);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-lg);
+  color: var(--text);
 }
 
 .notice h3 {
-  font-size: 1.25rem;
-  font-stretch: 110%;
+  font-size: var(--text-xl);
+  font-weight: 600;
 }
 
 .notice p {
   margin-bottom: var(--space-2);
-  color: rgb(247 247 242 / 0.75);
+  color: var(--text-muted);
 }
 
-.notice .btn--primary {
-  border-color: var(--color-brass);
-  background: var(--color-brass);
-  color: var(--color-board);
+.notice__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
 }
 
 .pop-enter-active,
@@ -326,5 +347,15 @@ const isLive = computed(() => race.status === 'racing' || race.status === 'pause
 .pop-leave-to {
   opacity: 0;
   transform: scale(0.8);
+}
+
+@media (max-width: 640px) {
+  .track {
+    min-height: calc(var(--lanes) * 40px + 16px);
+  }
+
+  .pole span {
+    display: none;
+  }
 }
 </style>

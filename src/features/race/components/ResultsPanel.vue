@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { ROUND_DISTANCES } from '../domain/config'
+import PanelHeader from '@/features/layout/components/PanelHeader.vue'
 import { useRaceStore } from '../stores/race'
 import { formatGap, formatRaceTime } from '../utils/format'
 import SilkIcon from './SilkIcon.vue'
@@ -36,12 +36,10 @@ const announcement = computed(() => {
 
 <template>
   <section class="panel" aria-labelledby="results-title">
-    <h2 id="results-title" class="panel__title">
-      Results <small>{{ race.results.length }} of {{ ROUND_DISTANCES.length }}</small>
-    </h2>
+    <PanelHeader panel-id="results">{{ race.results.length }} of {{ race.roundCount }}</PanelHeader>
     <p class="sr-only" aria-live="polite">{{ announcement }}</p>
     <p v-if="!rounds.length" class="panel__empty">Results land here as each round finishes.</p>
-    <TransitionGroup tag="ol" name="result" class="scroll">
+    <TransitionGroup tag="ol" name="result" class="panel__body">
       <li v-for="round in rounds" :key="round.roundNumber" class="round">
         <h3 class="round-title">Round {{ round.roundNumber }} · {{ round.distance }}m</h3>
         <ol class="finishers">
@@ -52,7 +50,7 @@ const announcement = computed(() => {
             <em>{{ finisher.time }}</em>
           </li>
         </ol>
-        <details>
+        <details v-if="round.finishers.length > PODIUM_SIZE">
           <summary>All {{ round.finishers.length }} finishers</summary>
           <ol class="finishers">
             <li v-for="finisher in round.finishers.slice(PODIUM_SIZE)" :key="finisher.horse.id">
@@ -69,25 +67,19 @@ const announcement = computed(() => {
 </template>
 
 <style scoped>
-.scroll {
-  overflow: auto;
-  min-height: 0;
-}
-
 .round {
-  padding: 10px var(--space-4);
-  border-top: 1px solid var(--bg-subtle);
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  border-top: 1px solid var(--border-soft);
 }
 
 .round-title {
   font-size: var(--text-sm);
-  font-weight: 700;
-  font-stretch: 105%;
+  font-weight: 600;
 }
 
 .finishers {
   display: grid;
-  gap: var(--space-1);
+  gap: var(--space-2);
   margin-top: var(--space-2);
 }
 
@@ -96,24 +88,22 @@ const announcement = computed(() => {
   grid-template-columns: 1.125rem 20px 1fr auto;
   align-items: center;
   gap: var(--space-2);
-  font-size: var(--text-sm);
 }
 
 b {
-  font-stretch: var(--stretch-condensed);
+  font-weight: 600;
 }
 
 em {
   font-style: normal;
-  font-size: var(--text-xs);
   color: var(--text-muted);
 }
 
 summary {
   width: fit-content;
-  margin-top: 6px;
-  font-size: var(--text-xs);
-  color: var(--text-muted);
+  margin-top: var(--space-2);
+  font-weight: 600;
+  text-decoration: underline;
   cursor: pointer;
 }
 

@@ -1,7 +1,9 @@
 /** 73.418 → "1:13.42" */
 export function formatRaceTime(seconds: number): string {
-  const minutes = Math.floor(seconds / 60)
-  const rest = (seconds - minutes * 60).toFixed(2).padStart(5, '0')
+  // Round first, so 59.996 becomes "1:00.00" rather than "0:60.00".
+  const total = Math.round(seconds * 100) / 100
+  const minutes = Math.floor(total / 60)
+  const rest = (total - minutes * 60).toFixed(2).padStart(5, '0')
   return `${minutes}:${rest}`
 }
 

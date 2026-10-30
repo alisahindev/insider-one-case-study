@@ -11,7 +11,7 @@ h3,
 p,
 ol,
 ul,
-figure {
+fieldset {
   margin: 0;
 }
 
@@ -21,17 +21,23 @@ ul {
   list-style: none;
 }
 
+fieldset {
+  padding: 0;
+  border: 0;
+}
+
 body {
   background: var(--bg-page);
   color: var(--text);
   font-family: var(--font);
-  font-size: var(--text-md);
-  line-height: 1.4;
+  font-size: var(--text-sm);
+  line-height: 1.43;
   font-variant-numeric: tabular-nums;
   -webkit-font-smoothing: antialiased;
 }
 
-button {
+button,
+input {
   font: inherit;
   color: inherit;
 }
@@ -41,63 +47,120 @@ button {
   outline-offset: 2px;
 }
 
+/* Buttons: outlined by default, one filled Rausch button per view. */
 .btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: var(--space-2);
-  padding: 9px var(--space-4);
-  border: 1px solid var(--border);
+  min-height: 40px;
+  padding: 0 var(--space-4);
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius-sm);
   background: var(--bg-surface);
   font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
-  transition: background var(--duration) var(--ease-out);
+  transition:
+    background var(--duration) var(--ease-out),
+    transform 100ms var(--ease-out);
 }
 
 .btn:hover {
   background: var(--bg-subtle);
 }
 
+.btn:active {
+  transform: scale(0.97);
+}
+
 .btn--primary {
-  border-color: var(--text);
-  background: var(--text);
-  color: var(--bg-surface);
+  border-color: transparent;
+  background: var(--primary);
+  color: #ffffff;
 }
 
 .btn--primary:hover {
-  background: var(--text-muted);
+  background: var(--primary);
+  filter: brightness(0.92);
+}
+
+.btn--ghost {
+  border-color: transparent;
+  background: none;
+  text-decoration: underline;
+}
+
+/* Round icon button, like Airbnb's guest steppers. */
+.icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--bg-surface);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.icon-btn:hover:not(:disabled) {
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.icon-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
 }
 
 .panel {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-lg);
   background: var(--bg-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.panel__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-4) var(--space-3);
 }
 
 .panel__title {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  padding: 14px var(--space-4) 10px;
+  flex: 1;
   font-size: var(--text-lg);
-  font-weight: 700;
-  font-stretch: 110%;
+  font-weight: 600;
 }
 
-.panel__title small {
+.panel__meta {
   font-size: var(--text-sm);
-  font-weight: 500;
-  font-stretch: 100%;
   color: var(--text-muted);
 }
 
 .panel__empty {
   padding: 0 var(--space-4) var(--space-4);
   color: var(--text-muted);
+}
+
+.panel__body {
+  overflow: auto;
+  min-height: 0;
+}
+
+/* Drag and drop: the placeholder left in the list, and the copy that follows the pointer. */
+.panel-ghost {
+  opacity: 0.35;
+}
+
+.panel-drag {
+  box-shadow: var(--shadow-lg);
+  opacity: 1 !important; /* Sortable fades its pointer copy by default */
 }
 
 .sr-only {
@@ -114,6 +177,7 @@ button {
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
 }

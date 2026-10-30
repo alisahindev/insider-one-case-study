@@ -1,29 +1,20 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { SPEED_OPTIONS, useRaceStore } from '../stores/race'
+import { computed, onMounted, onUnmounted } from 'vue'
+import { SPEED_OPTIONS } from '../domain/config'
+import { useRaceStore } from '../stores/race'
 
 const race = useRaceStore()
 
 const startLabel = computed(
   () =>
-    ({ idle: 'Start', ready: 'Start', racing: 'Pause', paused: 'Resume', finished: 'Race again' })[
-      race.status
-    ],
+    ({
+      idle: 'Start',
+      ready: 'Start',
+      racing: 'Pause',
+      paused: 'Resume',
+      finished: 'Race again',
+    })[race.status],
 )
-
-const linkCopied = ref(false)
-async function copyShareLink() {
-  const url = new URL(location.href)
-  url.searchParams.set('seed', String(race.seed))
-  try {
-    await navigator.clipboard.writeText(url.href)
-    linkCopied.value = true
-    setTimeout(() => (linkCopied.value = false), 2000)
-  } catch {
-    // Clipboard is blocked outside secure contexts; let the user copy it by hand.
-    window.prompt('Copy this link to share the race day', url.href)
-  }
-}
 
 const shortcuts: Record<string, () => void> = {
   ' ': race.toggle,
@@ -36,7 +27,7 @@ const shortcuts: Record<string, () => void> = {
 function onKeydown(event: KeyboardEvent) {
   if (event.repeat || event.metaKey || event.ctrlKey || event.altKey) return
   const target = event.target as HTMLElement
-  if (target.closest('input, textarea, select')) return
+  if (target.closest('input, textarea, select, dialog')) return
   // Space already activates a focused button; don't toggle twice.
   if (event.key === ' ' && target.closest('button, summary, a')) return
   const action = shortcuts[event.key.toLowerCase()]
@@ -51,11 +42,6 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
 
 <template>
   <div class="controls">
-    <button type="button" class="seed" @click="copyShareLink">
-      <span aria-live="polite">{{ linkCopied ? 'Link copied' : `Race day #${race.seed}` }}</span>
-      <span class="sr-only">, copy share link</span>
-    </button>
-    <div class="spacer" />
     <div class="speed" role="group" aria-label="Playback speed">
       <button
         v-for="option in SPEED_OPTIONS"
@@ -68,7 +54,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
       </button>
     </div>
     <button type="button" class="btn" aria-keyshortcuts="G" @click="race.generate()">
-      Generate program <kbd aria-hidden="true">G</kbd>
+      Generate program
     </button>
     <button
       type="button"
@@ -83,13 +69,13 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
         viewBox="0 0 12 12"
         aria-hidden="true"
       >
-        <rect x="2" y="1" width="3" height="10" fill="currentColor" />
-        <rect x="7" y="1" width="3" height="10" fill="currentColor" />
+        <rect x="2" y="1" width="3" height="10" rx="1" fill="currentColor" />
+        <rect x="7" y="1" width="3" height="10" rx="1" fill="currentColor" />
       </svg>
       <svg v-else width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
-        <path d="M2 1 L11 6 L2 11Z" fill="currentColor" />
+        <path d="M2.5 1.5 L10.5 6 L2.5 10.5Z" fill="currentColor" stroke-linejoin="round" />
       </svg>
-      {{ startLabel }} <kbd aria-hidden="true">Space</kbd>
+      {{ startLabel }}
     </button>
   </div>
 </template>
@@ -97,81 +83,51 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
 <style scoped>
 .controls {
   display: flex;
-  flex: 1;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-3);
-}
-
-.spacer {
-  flex: 1;
-}
-
-.seed {
-  padding: var(--space-1) 10px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-pill);
-  background: none;
-  font-size: var(--text-sm);
-  color: var(--text-muted);
-  cursor: pointer;
+  justify-content: flex-end;
+  gap: var(--space-2);
 }
 
 .speed {
   display: inline-flex;
-  overflow: hidden;
+  gap: 2px;
+  padding: 3px;
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--bg-surface);
+  border-radius: var(--radius-pill);
 }
 
 .speed button {
-  padding: 9px var(--space-3);
+  min-width: 40px;
+  height: 32px;
   border: 0;
+  border-radius: var(--radius-pill);
   background: none;
-  font-size: var(--text-sm);
   font-weight: 600;
   color: var(--text-muted);
   cursor: pointer;
 }
 
+.speed button:hover {
+  color: var(--text);
+}
+
 .speed button[aria-pressed='true'] {
-  background: var(--color-board);
-  color: var(--color-rail);
+  background: var(--bg-strong);
+  color: var(--text-on-strong);
 }
 
 .start {
-  min-width: 9.5rem;
-  justify-content: center;
+  min-width: 8.5rem;
 }
 
-kbd {
-  padding: 0 var(--space-1);
-  border: 1px solid currentColor;
-  border-radius: 4px;
-  font: inherit;
-  font-size: var(--text-xs);
-  opacity: 0.7;
-}
-
-/* Phones: controls get their own row under the wordmark, main actions split it evenly. */
 @media (max-width: 640px) {
   .controls {
-    flex-basis: 100%;
-  }
-
-  kbd,
-  .spacer {
-    display: none;
-  }
-
-  .seed {
-    margin-right: auto;
+    width: 100%;
   }
 
   .controls > .btn {
     flex: 1 1 40%;
-    justify-content: center;
     min-width: 0;
   }
 }

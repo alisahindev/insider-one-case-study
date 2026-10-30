@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { ROUND_DISTANCES } from '../domain/config'
 import { useRaceStore } from '../stores/race'
-import { formatRaceTime } from '../utils/format'
 
 const race = useRaceStore()
 
@@ -11,29 +9,29 @@ const title = computed(() => {
   return round ? `Round ${round.number} · ${round.distance}m` : 'Race day'
 })
 
-const subtitle = computed(() => {
-  switch (race.status) {
-    case 'idle':
-      return 'Generate a program to draw the field for six rounds.'
-    case 'ready':
-      return 'The program is set. Press Start when you are ready.'
-    case 'finished':
-      return 'All six rounds are in. Check the results.'
-    default:
-      return `${race.runners.length} runners · ${formatRaceTime(race.elapsed)}`
-  }
+// Only live facts here; the track notice already says what to do next.
+const isLive = computed(() => race.status === 'racing' || race.status === 'paused')
+// Race time runs RACE_TIME_SCALE× faster than real time, so even tenths would change every
+// frame: unreadable, and each text change costs a layout. Whole seconds tick a few times a second.
+const clock = computed(() => {
+  const seconds = Math.floor(race.elapsed)
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`
 })
 </script>
 
 <template>
   <div class="race-header">
-    <h2 class="title">{{ title }}</h2>
-    <p class="subtitle">{{ subtitle }}</p>
+    <div>
+      <h2 class="title">{{ title }}</h2>
+      <p v-if="isLive" class="subtitle">
+        {{ race.runners.length }} runners · {{ clock }}
+      </p>
+    </div>
     <ol
       class="progress"
-      :aria-label="`${race.results.length} of ${ROUND_DISTANCES.length} rounds finished`"
+      :aria-label="`${race.results.length} of ${race.roundCount} rounds finished`"
     >
-      <li v-for="(_, i) in ROUND_DISTANCES" :key="i" :class="race.roundState(i + 1)" />
+      <li v-for="n in race.roundCount" :key="n" :class="race.roundState(n)" />
     </ol>
   </div>
 </template>
@@ -43,43 +41,40 @@ const subtitle = computed(() => {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
+  justify-content: space-between;
   gap: var(--space-2) var(--space-4);
 }
 
 .title {
   font-size: var(--text-display);
-  font-weight: 800;
-  font-stretch: var(--stretch-wide);
-  line-height: 1;
-  letter-spacing: -0.02em;
+  font-weight: 600;
+  line-height: 1.15;
 }
 
 .subtitle {
-  padding-bottom: 3px;
-  font-size: var(--text-sm);
+  margin-top: 2px;
   color: var(--text-muted);
 }
 
 .progress {
   display: flex;
   gap: var(--space-1);
-  margin-left: auto;
   padding-bottom: 6px;
 }
 
 .progress li {
-  width: 28px;
-  height: 6px;
-  border-radius: 3px;
+  width: 24px;
+  height: 4px;
+  border-radius: 2px;
   background: var(--border);
   transition: background var(--duration) var(--ease-out);
 }
 
 .progress .done {
-  background: var(--accent);
+  background: var(--text);
 }
 
 .progress .live {
-  background: var(--color-brass);
+  background: var(--accent);
 }
 </style>

@@ -1,10 +1,11 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import { COUNTDOWN_SECONDS } from '../domain/config'
+import { COUNTDOWN_SECONDS, type Speed } from '../domain/config'
 import { createHorses } from '../domain/horses'
 import { createRunners, distanceAt, rankRunners } from '../domain/race'
 import { createRng, randomSeed } from '../domain/random'
 import { createSchedule } from '../domain/schedule'
+import { DEFAULT_SETTINGS, type RaceSettings } from '../domain/settings'
 import type { RoundResult } from '../domain/types'
 
 export type RaceStatus = 'idle' | 'ready' | 'racing' | 'paused' | 'finished'
@@ -12,8 +13,6 @@ export type RoundState = 'done' | 'live' | 'upcoming'
 
 /** Race seconds simulated per real second at 1x, so a 70 s race plays in ~12 s. */
 export const RACE_TIME_SCALE = 6
-export const SPEED_OPTIONS = [1, 2, 4] as const
-export type Speed = (typeof SPEED_OPTIONS)[number]
 
 export interface Standing {
   horseId: number
@@ -23,6 +22,8 @@ export interface Standing {
 }
 
 export const useRaceStore = defineStore('race', () => {
+  /** Settings the current race day was created with; editing the form doesn't touch a running day. */
+  const settings = ref<RaceSettings>(DEFAULT_SETTINGS)
   const seed = ref(randomSeed())
   const programSeed = ref<number | null>(null)
   const status = ref<RaceStatus>('idle')
@@ -30,19 +31,27 @@ export const useRaceStore = defineStore('race', () => {
   const countdown = ref(0)
   /** Race clock of the current round, in simulated seconds. */
   const elapsed = ref(0)
-  const speed = ref<Speed>(1)
+  const speed = ref<Speed>(DEFAULT_SETTINGS.speed)
   const results = ref<RoundResult[]>([])
-  // Not state: a private source of program seeds, so `?seed=` replays the whole race day.
+  // Not state: a private source of program seeds, so one seed replays the whole race day.
   let programRng = createRng(seed.value)
 
   // Everything below is derived from the seeds, so a seed fully reproduces a race day.
-  const horses = computed(() => createHorses(createRng(seed.value)))
+  const horses = computed(() => createHorses(createRng(seed.value), settings.value.horseCount))
   const horsesById = computed(() => new Map(horses.value.map((horse) => [horse.id, horse])))
 
   const schedule = computed(() =>
-    programSeed.value === null ? [] : createSchedule(createRng(programSeed.value), horses.value),
+    programSeed.value === null
+      ? []
+      : createSchedule(
+          createRng(programSeed.value),
+          horses.value,
+          settings.value.distances,
+          settings.value.horsesPerRound,
+        ),
   )
   const currentRound = computed(() => schedule.value[roundIndex.value])
+  const roundCount = computed(() => settings.value.distances.length)
 
   const runners = computed(() => {
     const round = currentRound.value
@@ -81,19 +90,24 @@ export const useRaceStore = defineStore('race', () => {
     return isLive && number === currentRound.value?.number ? 'live' : 'upcoming'
   }
 
-  function setSeed(value: number) {
-    seed.value = value
-    programRng = createRng(value)
+  /** Builds a new stable from settings; a null seed means a fresh random one. */
+  function newRaceDay(next: RaceSettings) {
+    settings.value = next
+    seed.value = next.seed ?? randomSeed()
+    programRng = createRng(seed.value)
+    speed.value = next.speed
     programSeed.value = null
-    status.value = 'idle'
+    roundIndex.value = 0
+    elapsed.value = 0
     results.value = []
+    status.value = 'idle'
   }
 
   function generate(value = randomSeed(programRng)) {
     programSeed.value = value
     roundIndex.value = 0
     elapsed.value = 0
-    countdown.value = COUNTDOWN_SECONDS
+    countdown.value = settings.value.countdown ? COUNTDOWN_SECONDS : 0
     results.value = []
     status.value = 'ready'
   }
@@ -138,13 +152,14 @@ export const useRaceStore = defineStore('race', () => {
     if (roundIndex.value < schedule.value.length - 1) {
       roundIndex.value++
       elapsed.value = 0
-      countdown.value = COUNTDOWN_SECONDS
+      countdown.value = settings.value.countdown ? COUNTDOWN_SECONDS : 0
     } else {
       status.value = 'finished'
     }
   }
 
   return {
+    settings,
     seed,
     programSeed,
     status,
@@ -157,12 +172,13 @@ export const useRaceStore = defineStore('race', () => {
     horsesById,
     schedule,
     currentRound,
+    roundCount,
     runners,
     placings,
     roundDuration,
     standings,
     roundState,
-    setSeed,
+    newRaceDay,
     generate,
     start,
     pause,

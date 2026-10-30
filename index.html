@@ -2,16 +2,83 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/src/assets/logo.svg" type="image/svg+xml" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="Furlong: a six-round horse racing simulation built with Vue and Pinia."
+      content="1nsider: a horse racing simulation built with Vue and Pinia."
     />
-    <meta name="theme-color" content="#1f5c3a" />
-    <title>Furlong · Horse racing</title>
+    <meta name="theme-color" content="#ff385c" />
+    <title>1nsider · Horse racing</title>
+    <!-- Apply a saved theme before first paint, so dark mode never flashes white. -->
+    <script>
+      try {
+        const theme = localStorage.getItem('1nsider:theme')
+        if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme
+      } catch {}
+    </script>
+    <!-- Splash styles live here so they paint before any JavaScript downloads. -->
+    <style>
+      :root {
+        color-scheme: light dark;
+      }
+      :root[data-theme='light'] {
+        color-scheme: light;
+      }
+      :root[data-theme='dark'] {
+        color-scheme: dark;
+      }
+      #splash {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        display: grid;
+        place-content: center;
+        justify-items: center;
+        gap: 12px;
+        background: light-dark(#ffffff, #121212);
+        color: light-dark(#6a6a6a, #b0b0b0);
+        font:
+          500 14px system-ui,
+          sans-serif;
+        transition:
+          opacity 300ms ease,
+          visibility 300ms;
+      }
+      #splash.splash--done {
+        opacity: 0;
+        visibility: hidden;
+      }
+      .splash__horse {
+        width: 168px;
+        aspect-ratio: 184 / 116;
+        overflow: hidden;
+      }
+      .splash__horse span {
+        display: block;
+        width: 1100%;
+        height: 100%;
+        background: #ff385c;
+        mask: url('/src/assets/horse-gallop.png') 0 0 / 100% 100% no-repeat;
+        animation: splash-gallop 0.5s steps(11) infinite;
+      }
+      @keyframes splash-gallop {
+        to {
+          transform: translateX(-100%);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .splash__horse span {
+          animation: none;
+        }
+      }
+    </style>
   </head>
   <body>
+    <div id="splash" role="status">
+      <div class="splash__horse" aria-hidden="true"><span></span></div>
+      <p>Saddling up…</p>
+    </div>
     <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>

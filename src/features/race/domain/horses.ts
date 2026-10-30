@@ -1,4 +1,4 @@
-import { CONDITION_MAX, CONDITION_MIN, HORSE_COUNT } from './config'
+import { CONDITION_MAX, CONDITION_MIN } from './config'
 import { randomInt, sample, type Rng } from './random'
 import type { Horse, HorseColor } from './types'
 
@@ -49,7 +49,7 @@ export const HORSE_COLORS: readonly HorseColor[] = [
   { name: 'Ivory', hex: '#F5F5F0' },
 ]
 
-export function createHorses(rng: Rng, count = HORSE_COUNT): Horse[] {
+export function createHorses(rng: Rng, count: number): Horse[] {
   const names = sample(rng, NAMES, count)
   const colors = sample(rng, HORSE_COLORS, count)
   return names.map((name, i) => ({

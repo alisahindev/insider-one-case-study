@@ -1,60 +1,73 @@
 /*
- * Design tokens: the only place raw colours, sizes and timings live.
+ * Design tokens, modelled on Airbnb's design language: white surfaces, #222 ink,
+ * Rausch for the one primary action, soft shadows, 8/12/16px radii, an 8pt grid.
  * Components read role tokens (--bg-*, --text-*), never palette hex values.
+ *
+ * Theme: each role holds both values via light-dark(); `color-scheme` picks one.
+ * It follows the device by default, and data-theme on <html> overrides it.
  */
 :root {
-  /* Palette: a racecourse seen from the stands */
-  --color-turf: #1f5c3a;
-  --color-turf-stripe: #1b5433;
-  --color-rail: #f7f7f2;
-  --color-board: #14211a;
-  --color-board-raised: #1e3127;
-  --color-brass: #e3c35a;
+  color-scheme: light dark;
+}
 
-  /* Roles */
-  --bg-page: #e8ece4;
-  --bg-surface: #ffffff;
-  --bg-subtle: #eef1ec;
-  --text: #14211a;
-  --text-muted: #4a5a50;
-  --border: #d5dcd2;
-  --accent: var(--color-turf);
-  --focus: #2459c9;
+:root[data-theme='light'] {
+  color-scheme: light;
+}
 
-  /* Type: one variable family, width carries the hierarchy */
-  --font: 'Archivo Variable', system-ui, sans-serif;
-  --text-xs: 0.6875rem;
-  --text-sm: 0.8125rem;
-  --text-md: 0.875rem;
-  --text-lg: 1rem;
-  --text-display: clamp(1.625rem, 1.1rem + 1.6vw, 2.25rem);
-  --stretch-condensed: 80%;
-  --stretch-wide: 125%;
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}
 
-  /* Space and shape */
+:root {
+  /* Palette */
+  --color-rausch: #ff385c;
+  --color-rausch-deep: #e00b41; /* passes AA with white text, used for filled buttons */
+  --color-ink: #222222;
+  --color-turf: #3d8b5c;
+  --color-turf-stripe: #378255;
+  --color-rail: #ffffff;
+
+  /* Roles: light-dark(light value, dark value) */
+  --bg-page: light-dark(#ffffff, #121212);
+  --bg-surface: light-dark(#ffffff, #1c1c1c);
+  --bg-subtle: light-dark(#f7f7f7, #262626);
+  --bg-strong: light-dark(#222222, #f7f7f7);
+  --text: light-dark(#222222, #f7f7f7);
+  --text-muted: light-dark(#6a6a6a, #b0b0b0);
+  --text-on-strong: light-dark(#ffffff, #222222);
+  --border: light-dark(#dddddd, #3a3a3a);
+  --border-soft: light-dark(#ebebeb, #2e2e2e);
+  --border-strong: light-dark(#222222, #f7f7f7);
+  --accent: var(--color-rausch);
+  --primary: var(--color-rausch-deep);
+  --focus: light-dark(#222222, #f7f7f7);
+
+  /* Type: Figtree stands in for Airbnb Cereal */
+  --font: 'Figtree Variable', 'Helvetica Neue', system-ui, sans-serif;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-md: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.375rem;
+  --text-display: clamp(1.5rem, 1.1rem + 1.2vw, 2rem);
+
+  /* Space (8pt grid) and shape */
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
   --space-4: 16px;
   --space-5: 24px;
-  --radius-sm: 6px;
-  --radius-md: 10px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
   --radius-pill: 999px;
+
+  /* Elevation: deeper in dark mode, where soft shadows disappear */
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.08);
+  --shadow-md: 0 6px 16px light-dark(rgb(0 0 0 / 0.12), rgb(0 0 0 / 0.5));
+  --shadow-lg: 0 8px 28px light-dark(rgb(0 0 0 / 0.28), rgb(0 0 0 / 0.6));
 
   /* Motion */
   --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
-  --duration: 220ms;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg-page: #0e1712;
-    --bg-surface: #15221b;
-    --bg-subtle: #1b2b22;
-    --text: #e8ece4;
-    --text-muted: #a3b2a8;
-    --border: #2a3d31;
-    --accent: #6cc08f;
-    --focus: #8fb3ff;
-  }
+  --duration: 200ms;
 }

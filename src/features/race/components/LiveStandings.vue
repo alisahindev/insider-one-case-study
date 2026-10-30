@@ -28,34 +28,34 @@ const order = computed(() =>
 
 <style scoped>
 .standings {
-  border-radius: var(--radius-md);
-  background: var(--color-board);
-  color: var(--color-rail);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-sm);
 }
 
+/* auto-fill keeps any field size (1–20 runners) on a tidy grid. */
 .board {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 2px;
-  padding: 6px;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: var(--space-2);
+  padding: var(--space-3);
 }
 
 li {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-2);
   min-width: 0;
-  padding: 6px var(--space-2);
-  border-radius: 5px;
-  background: var(--color-board-raised);
-  font-size: var(--text-sm);
+  padding: 6px var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
   font-weight: 600;
-  font-stretch: 85%;
 }
 
 b {
-  font-stretch: var(--stretch-condensed);
-  color: var(--color-brass);
+  min-width: 1.25ch;
+  color: var(--text-muted);
 }
 
 .name {
@@ -65,8 +65,9 @@ b {
 }
 
 .leader {
-  background: var(--color-brass);
-  color: var(--color-board);
+  border-color: var(--border-strong);
+  background: var(--bg-strong);
+  color: var(--text-on-strong);
 }
 
 .leader b {
@@ -74,13 +75,12 @@ b {
 }
 
 .overtake-move {
-  transition: transform 400ms var(--ease-out);
+  transition: transform 250ms var(--ease-out);
 }
 
 .empty {
-  padding: var(--space-3) var(--space-4);
-  font-size: var(--text-sm);
-  color: rgb(247 247 242 / 0.7);
+  padding: var(--space-4);
+  color: var(--text-muted);
 }
 
 @media (max-width: 640px) {

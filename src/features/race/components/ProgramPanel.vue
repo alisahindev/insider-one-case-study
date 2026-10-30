@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import PanelHeader from '@/features/layout/components/PanelHeader.vue'
 import { useRaceStore } from '../stores/race'
 import SilkIcon from './SilkIcon.vue'
 
@@ -9,20 +10,18 @@ const STATUS_LABEL = { done: 'Finished', live: 'Live', upcoming: 'Up next' } as 
 
 <template>
   <section class="panel" aria-labelledby="program-title">
-    <h2 id="program-title" class="panel__title">
-      Program <small>{{ race.schedule.length || 6 }} rounds</small>
-    </h2>
+    <PanelHeader panel-id="program">{{ race.roundCount }} rounds</PanelHeader>
     <p v-if="!race.schedule.length" class="panel__empty">
-      Generate a program to draw 10 horses for each round.
+      Generate a program to draw {{ race.settings.horsesPerRound }} horses for each round.
     </p>
-    <ol v-else class="rounds">
+    <ol v-else class="panel__body rounds">
       <li v-for="round in race.schedule" :key="round.number">
         <details>
           <summary>
             <span class="round-title">Round {{ round.number }} · {{ round.distance }}m</span>
-            <span class="chip" :class="race.roundState(round.number)">{{
-              STATUS_LABEL[race.roundState(round.number)]
-            }}</span>
+            <span class="chip" :class="race.roundState(round.number)">
+              {{ STATUS_LABEL[race.roundState(round.number)] }}
+            </span>
             <span class="silks" aria-hidden="true">
               <SilkIcon
                 v-for="id in round.horseIds"
@@ -47,14 +46,15 @@ const STATUS_LABEL = { done: 'Finished', live: 'Live', upcoming: 'Up next' } as 
 
 <style scoped>
 .rounds > li {
-  border-top: 1px solid var(--bg-subtle);
+  border-top: 1px solid var(--border-soft);
 }
 
 summary {
   display: grid;
   grid-template-columns: 1fr auto;
+  align-items: center;
   gap: var(--space-2);
-  padding: 10px var(--space-4);
+  padding: var(--space-3) var(--space-4);
   list-style: none;
   cursor: pointer;
 }
@@ -68,41 +68,38 @@ summary:hover {
 }
 
 .round-title {
-  font-size: var(--text-sm);
-  font-weight: 700;
-  font-stretch: 105%;
+  font-weight: 600;
 }
 
 .chip {
-  padding: 2px var(--space-2);
+  padding: 2px 10px;
   border-radius: var(--radius-pill);
-  background: var(--bg-subtle);
   font-size: var(--text-xs);
   font-weight: 600;
   color: var(--text-muted);
 }
 
 .chip.live {
-  background: var(--color-brass);
-  color: var(--color-board);
+  background: var(--primary);
+  color: #ffffff;
 }
 
 .chip.done {
-  background: var(--accent);
-  color: var(--bg-surface);
+  background: var(--bg-subtle);
+  color: var(--text);
 }
 
 .silks {
   grid-column: 1 / -1;
   display: flex;
+  flex-wrap: wrap;
   gap: 3px;
 }
 
 .entrants {
   display: grid;
-  gap: var(--space-1);
+  gap: 6px;
   padding: 0 var(--space-4) var(--space-3);
-  font-size: var(--text-sm);
 }
 
 .entrants li {
@@ -113,8 +110,7 @@ summary:hover {
 
 .gate {
   width: 1.25rem;
-  font-weight: 700;
-  font-stretch: var(--stretch-condensed);
+  font-weight: 600;
   color: var(--text-muted);
 }
 </style>
