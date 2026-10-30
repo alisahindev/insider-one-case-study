@@ -35,7 +35,7 @@ Every row has a Playwright test named after the PDF item in [`e2e/requirements.s
 | Rounds of 1200, 1400, 1600, 1800, 2000 and 2200 m          | `DEFAULT_SETTINGS.distances`                                                                                                       |
 | Vuex or Pinia                                              | Five Pinia setup stores                                                                                                            |
 | Component-based design                                     | 15 single-file components                                                                                                          |
-| Bonus: unit, E2E and visual tests                          | 599 Vitest tests, 150 Playwright tests, visual baselines for macOS and Linux                                                       |
+| Bonus: unit, E2E and visual tests                          | 602 Vitest tests, 154 Playwright tests, visual baselines for macOS and Linux                                                       |
 
 The brief's rules are the app's **defaults**. The setup dialog can change them (1–20 horses, runners per round, 1–10 rounds, the distance of each round), which is also how I'd expect the feature to grow.
 
@@ -110,8 +110,8 @@ npm run test:e2e         # Playwright, desktop + Pixel 7, against the production
 | Layer                      | Tests      | Notes                                                                                                                           |
 | -------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | Unit: domain, stores, loop | 405        | Seeded RNG, race maths, settings normalisation against hostile input, every store action, corrupted and throwing `localStorage` |
-| Components                 | 194        | Mounted against real Pinia stores and driven through their public actions, not mocks                                            |
-| E2E                        | 150        | One test per brief item, flows and edge cases (1×1 to 20×10 days, seeds, persistence, drag and keyboard moves, the tour)        |
+| Components                 | 197        | Mounted against real Pinia stores and driven through their public actions, not mocks                                            |
+| E2E                        | 154        | One test per brief item, flows and edge cases (1×1 to 20×10 days, seeds, persistence, drag and keyboard moves, the tour)        |
 | Accessibility              | inside E2E | axe WCAG 2 A/AA scans with zero violations in five states, light and dark                                                       |
 | Visual                     | inside E2E | Seven screens per device, with a fixed seed and a paused clock                                                                  |
 
