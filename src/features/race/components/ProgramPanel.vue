@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import PanelHeader from '@/features/layout/components/PanelHeader.vue'
 import { useRaceStore } from '../stores/race'
+import { pluralize } from '../utils/format'
 import SilkIcon from './SilkIcon.vue'
 
 const race = useRaceStore()
@@ -10,9 +11,12 @@ const STATUS_LABEL = { done: 'Finished', live: 'Live', upcoming: 'Up next' } as 
 
 <template>
   <section class="panel" aria-labelledby="program-title">
-    <PanelHeader panel-id="program">{{ race.roundCount }} rounds</PanelHeader>
+    <PanelHeader panel-id="program">
+      {{ race.roundCount }} {{ pluralize(race.roundCount, 'round') }}
+    </PanelHeader>
     <p v-if="!race.schedule.length" class="panel__empty">
-      Generate a program to draw {{ race.settings.horsesPerRound }} horses for each round.
+      Generate a program to draw {{ race.settings.horsesPerRound }}
+      {{ pluralize(race.settings.horsesPerRound, 'horse') }} for each round.
     </p>
     <ol v-else class="panel__body rounds">
       <li v-for="round in race.schedule" :key="round.number">

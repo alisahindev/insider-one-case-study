@@ -7,6 +7,11 @@ export function formatRaceTime(seconds: number): string {
   return `${minutes}:${rest}`
 }
 
+/** (1, 'horse') → "horse", (2, 'horse') → "horses". Every noun in this UI takes a plain "s". */
+export function pluralize(count: number, noun: string): string {
+  return count === 1 ? noun : `${noun}s`
+}
+
 /** Gap behind the winner: 0.314 → "+0.31" */
 export function formatGap(seconds: number): string {
   return `+${seconds.toFixed(2)}`

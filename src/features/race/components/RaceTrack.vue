@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useRaceStore } from '../stores/race'
 import { useSettingsStore } from '../stores/settings'
+import { pluralize } from '../utils/format'
 import RunnerFigure from './RunnerFigure.vue'
 
 const race = useRaceStore()
@@ -39,7 +40,9 @@ const poles = computed(() => {
 const toGo = computed(() => {
   const leader = race.standings[0]
   if (!leader) return null
-  return leader.finished ? 'Finish' : `${Math.ceil((distance.value - leader.distance) / 50) * 50}m to go`
+  return leader.finished
+    ? 'Finish'
+    : `${Math.ceil((distance.value - leader.distance) / 50) * 50}m to go`
 })
 
 const isLive = computed(() => race.status === 'racing' || race.status === 'paused')
@@ -49,11 +52,19 @@ function poseOf(place: number | null) {
   return race.status === 'racing' ? 'gallop' : 'hold'
 }
 
+// Notice copy, phrased for a single round or horse as well as the default day.
 const summary = computed(() => {
   const { horseCount, horsesPerRound, distances } = race.settings
-  const rounds = distances.length === 1 ? 'one round' : `${distances.length} rounds`
   const [first, last] = [distances[0], distances[distances.length - 1]]
-  return { horseCount, horsesPerRound, rounds, first, last }
+  const single = distances.length === 1
+  return {
+    draw: `Draw ${horsesPerRound} of your ${horseCount} ${pluralize(horseCount, 'horse')} for ${
+      single ? 'the one round' : `each of the ${distances.length} rounds`
+    }.`,
+    lineup: single
+      ? `One round of ${first}m.`
+      : `${distances.length} rounds from ${first}m to ${last}m, run back to back.`,
+  }
 })
 </script>
 
@@ -93,10 +104,7 @@ const summary = computed(() => {
       </p>
       <div v-else-if="race.status === 'idle'" class="notice">
         <h3>Set the field</h3>
-        <p>
-          Draw {{ summary.horsesPerRound }} of your {{ summary.horseCount }} horses for each of the
-          {{ summary.rounds }}.
-        </p>
+        <p>{{ summary.draw }}</p>
         <div class="notice__actions">
           <button type="button" class="btn btn--primary" @click="race.generate()">
             Generate program
@@ -106,9 +114,7 @@ const summary = computed(() => {
       </div>
       <div v-else-if="race.status === 'ready'" class="notice">
         <h3>Round 1 is at the gate</h3>
-        <p>
-          {{ summary.rounds }} from {{ summary.first }}m to {{ summary.last }}m, run back to back.
-        </p>
+        <p>{{ summary.lineup }}</p>
         <div class="notice__actions">
           <button type="button" class="btn btn--primary" @click="race.start()">
             Start the races

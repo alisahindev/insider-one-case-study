@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useRaceStore } from '../stores/race'
 import { useSettingsStore } from '../stores/settings'
+import { pluralize } from '../utils/format'
 
 const race = useRaceStore()
 const setup = useSettingsStore()
@@ -10,10 +11,12 @@ const setup = useSettingsStore()
   <!-- Echoes Airbnb's search pill: the race day at a glance, one click to change it. -->
   <button type="button" class="summary" @click="setup.isSetupOpen = true">
     <span class="part"
-      ><b>{{ race.settings.horseCount }}</b> horses</span
+      ><b>{{ race.settings.horseCount }}</b>
+      {{ pluralize(race.settings.horseCount, 'horse') }}</span
     >
     <span class="part"
-      ><b>{{ race.settings.distances.length }}</b> rounds</span
+      ><b>{{ race.settings.distances.length }}</b>
+      {{ pluralize(race.settings.distances.length, 'round') }}</span
     >
     <span class="part"
       ><b>{{ race.settings.horsesPerRound }}</b> per round</span

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRaceStore } from '../stores/race'
+import { pluralize } from '../utils/format'
 
 const race = useRaceStore()
 
@@ -24,7 +25,7 @@ const clock = computed(() => {
     <div>
       <h2 class="title">{{ title }}</h2>
       <p v-if="isLive" class="subtitle">
-        {{ race.runners.length }} runners · {{ clock }}
+        {{ race.runners.length }} {{ pluralize(race.runners.length, 'runner') }} · {{ clock }}
       </p>
     </div>
     <ol

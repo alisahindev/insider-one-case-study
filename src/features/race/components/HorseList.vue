@@ -2,12 +2,15 @@
 import { computed } from 'vue'
 import PanelHeader from '@/features/layout/components/PanelHeader.vue'
 import { useRaceStore } from '../stores/race'
+import { pluralize } from '../utils/format'
 import SilkIcon from './SilkIcon.vue'
 
 const race = useRaceStore()
 // The round at the gate or running; none before a program or after the last round.
 const field = computed(() =>
-  race.status === 'idle' || race.status === 'finished' ? null : new Set(race.currentRound?.horseIds),
+  race.status === 'idle' || race.status === 'finished'
+    ? null
+    : new Set(race.currentRound?.horseIds),
 )
 // Runners first. Sort is stable, so each group keeps stable-number order.
 const rows = computed(() => {
@@ -18,7 +21,9 @@ const rows = computed(() => {
 
 <template>
   <section class="panel" aria-labelledby="stable-title">
-    <PanelHeader panel-id="stable">{{ race.horses.length }} horses</PanelHeader>
+    <PanelHeader panel-id="stable">
+      {{ race.horses.length }} {{ pluralize(race.horses.length, 'horse') }}
+    </PanelHeader>
     <!-- Focusable so keyboard users can scroll the list too. -->
     <div class="panel__body" tabindex="0" aria-labelledby="stable-title">
       <table class="horses">
