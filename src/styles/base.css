@@ -4,6 +4,12 @@
   box-sizing: border-box;
 }
 
+/* Stops iOS Safari from enlarging text when a phone turns to landscape. */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 body,
 h1,
 h2,

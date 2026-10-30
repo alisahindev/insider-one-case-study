@@ -294,32 +294,31 @@ describe('SetupDialog', () => {
       expect(bubble.isVisible()).toBe(false)
     })
 
+    // Esc reaches a modal <dialog> as a cancel event, wherever focus is (Safari keeps it off buttons).
     it('closes on Esc without closing the dialog', async () => {
       const { tip, bubble, dialog, setup } = await openSetup(SetupDialog)
-      const reachedDialog = vi.fn<(event: Event) => void>()
-      dialog.element.addEventListener('keydown', reachedDialog)
       await tip.trigger('click')
 
-      const esc = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })
-      tip.element.dispatchEvent(esc)
+      const cancel = new Event('cancel', { cancelable: true })
+      dialog.element.dispatchEvent(cancel)
       await nextTick()
 
       expect(bubble.isVisible()).toBe(false)
-      expect(esc.defaultPrevented).toBe(true)
-      expect(reachedDialog).not.toHaveBeenCalled()
+      expect(cancel.defaultPrevented).toBe(true)
       expect(setup.isSetupOpen).toBe(true)
     })
 
-    it('lets Esc through to the dialog when the tip is already closed', async () => {
-      const { tip, dialog } = await openSetup(SetupDialog)
-      const reachedDialog = vi.fn<(event: Event) => void>()
-      dialog.element.addEventListener('keydown', reachedDialog)
+    it('lets Esc close the dialog when the tip is already closed', async () => {
+      const { dialog } = await openSetup(SetupDialog)
+      const cancel = new Event('cancel', { cancelable: true })
+      dialog.element.dispatchEvent(cancel)
+      expect(cancel.defaultPrevented).toBe(false)
+    })
 
-      const esc = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })
-      tip.element.dispatchEvent(esc)
-
-      expect(esc.defaultPrevented).toBe(false)
-      expect(reachedDialog).toHaveBeenCalled()
+    it('focuses the button on click, so moving focus away closes the tip in Safari too', async () => {
+      const { tip } = await openSetup(SetupDialog)
+      await tip.trigger('click')
+      expect(document.activeElement).toBe(tip.element)
     })
   })
 

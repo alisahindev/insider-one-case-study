@@ -166,6 +166,7 @@ onScopeDispose(() => {
   >
     <div
       class="hole"
+      :class="{ 'is-empty': !hole.width }"
       aria-hidden="true"
       :style="{
         transform: `translate(${hole.x}px, ${hole.y}px)`,
@@ -244,6 +245,11 @@ onScopeDispose(() => {
     0 0 0 3px rgb(255 255 255 / 0.35),
     0 0 0 200vmax rgb(0 0 0 / 0.6);
   pointer-events: none;
+}
+
+/* Centred steps collapse the hole to a point; without this its ring shows as a speck on phones. */
+.hole.is-empty {
+  box-shadow: 0 0 0 200vmax rgb(0 0 0 / 0.6);
 }
 
 .card {

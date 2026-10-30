@@ -29,11 +29,17 @@ function open() {
   dialog.value?.showModal()
 }
 
-// Esc closes an open tip first; with the tip closed it falls through and closes the dialog.
-function closeSeedHelp(event: KeyboardEvent) {
+// Safari doesn't focus a clicked button, so focus it by hand: blur then closes the tip
+// when focus moves on, as it does in other browsers.
+function toggleSeedHelp(event: MouseEvent) {
+  ;(event.currentTarget as HTMLButtonElement).focus()
+  isSeedHelpOpen.value = !isSeedHelpOpen.value
+}
+
+// Esc closes an open tip first, wherever focus is; with the tip closed it closes the dialog.
+function onCancel(event: Event) {
   if (!isSeedHelpOpen.value) return
   event.preventDefault()
-  event.stopPropagation()
   isSeedHelpOpen.value = false
 }
 
@@ -89,6 +95,7 @@ function create() {
     ref="dialog"
     class="setup"
     aria-labelledby="setup-title"
+    @cancel="onCancel"
     @close="setup.isSetupOpen = false"
     @pointerdown="onPointerDown"
     @click.self="onBackdropClick"
@@ -211,9 +218,8 @@ function create() {
                   aria-label="What is a seed?"
                   :aria-expanded="isSeedHelpOpen"
                   aria-controls="seed-help"
-                  @click="isSeedHelpOpen = !isSeedHelpOpen"
+                  @click="toggleSeedHelp"
                   @blur="isSeedHelpOpen = false"
-                  @keydown.esc="closeSeedHelp"
                 >
                   <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
                     <circle
