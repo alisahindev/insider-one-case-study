@@ -41,5 +41,3 @@ __screenshots__/
 test-results/
 playwright-report/
 
-# Local tooling
-.claude/
