@@ -8,6 +8,7 @@ import { createSchedule } from '../domain/schedule'
 import type { RoundResult } from '../domain/types'
 
 export type RaceStatus = 'idle' | 'ready' | 'racing' | 'paused' | 'finished'
+export type RoundState = 'done' | 'live' | 'upcoming'
 
 /** Race seconds simulated per real second at 1x, so a 70 s race plays in ~12 s. */
 export const RACE_TIME_SCALE = 6
@@ -31,6 +32,8 @@ export const useRaceStore = defineStore('race', () => {
   const elapsed = ref(0)
   const speed = ref<Speed>(1)
   const results = ref<RoundResult[]>([])
+  // Not state: a private source of program seeds, so `?seed=` replays the whole race day.
+  let programRng = createRng(seed.value)
 
   // Everything below is derived from the seeds, so a seed fully reproduces a race day.
   const horses = computed(() => createHorses(createRng(seed.value)))
@@ -72,14 +75,21 @@ export const useRaceStore = defineStore('race', () => {
       )
   })
 
+  function roundState(number: number): RoundState {
+    if (number <= results.value.length) return 'done'
+    const isLive = status.value === 'racing' || status.value === 'paused'
+    return isLive && number === currentRound.value?.number ? 'live' : 'upcoming'
+  }
+
   function setSeed(value: number) {
     seed.value = value
+    programRng = createRng(value)
     programSeed.value = null
     status.value = 'idle'
     results.value = []
   }
 
-  function generate(value = randomSeed()) {
+  function generate(value = randomSeed(programRng)) {
     programSeed.value = value
     roundIndex.value = 0
     elapsed.value = 0
@@ -151,6 +161,7 @@ export const useRaceStore = defineStore('race', () => {
     placings,
     roundDuration,
     standings,
+    roundState,
     setSeed,
     generate,
     start,

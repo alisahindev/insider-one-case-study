@@ -110,6 +110,23 @@ describe('race store', () => {
     expect(store.standings.map((s) => s.horseId)).toEqual(store.placings.map((p) => p.horseId))
   })
 
+  it('reports each round as done, live or upcoming', () => {
+    store.generate(7)
+    expect(store.roundState(1)).toBe('upcoming')
+    store.start()
+    expect(store.roundState(1)).toBe('live')
+    runRound(store)
+    expect([1, 2, 3].map(store.roundState)).toEqual(['done', 'live', 'upcoming'])
+  })
+
+  it('replays the same programs for the same seed', () => {
+    store.generate()
+    const first = store.programSeed
+    store.setSeed(1)
+    store.generate()
+    expect(store.programSeed).toBe(first)
+  })
+
   it('starts a fresh program when started from idle or after finishing', () => {
     store.start()
     expect(store.status).toBe('racing')
