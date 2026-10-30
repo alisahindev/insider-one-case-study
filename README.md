@@ -19,7 +19,7 @@ Node 22.18+ or 24.12+. Other scripts are listed at the end.
 
 ## The brief, and where each part lives
 
-Every row has a Playwright test named after the PDF item in [`e2e/requirements.spec.ts`](e2e/requirements.spec.ts), run on desktop and on a Pixel 7.
+Every row has a Playwright test named after the PDF item in [`e2e/requirements.spec.ts`](e2e/requirements.spec.ts), run in Chrome (desktop and Pixel 7), Firefox, and Safari (desktop and iPhone 15).
 
 | Brief                                                      | Where                                                                                                                              |
 | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
@@ -35,7 +35,7 @@ Every row has a Playwright test named after the PDF item in [`e2e/requirements.s
 | Rounds of 1200, 1400, 1600, 1800, 2000 and 2200 m          | `DEFAULT_SETTINGS.distances`                                                                                                       |
 | Vuex or Pinia                                              | Five Pinia setup stores                                                                                                            |
 | Component-based design                                     | 15 single-file components                                                                                                          |
-| Bonus: unit, E2E and visual tests                          | 602 Vitest tests, 154 Playwright tests, visual baselines for macOS and Linux                                                       |
+| Bonus: unit, E2E and visual tests                          | 603 Vitest tests, 371 Playwright runs across five browser setups, visual baselines for macOS and Linux                             |
 
 The brief's rules are the app's **defaults**. The setup dialog can change them (1–20 horses, runners per round, 1–10 rounds, the distance of each round), which is also how I'd expect the feature to grow.
 
@@ -104,20 +104,20 @@ Each horse's speed is a function of time: a base pace from its condition, a ±4%
 ```bash
 npm run test:unit        # Vitest, watch mode
 npm run test:coverage    # Vitest with coverage
-npm run test:e2e         # Playwright, desktop + Pixel 7, against the production build
+npm run test:e2e         # Playwright in Chrome, Firefox and Safari, against the production build
 ```
 
-| Layer                      | Tests      | Notes                                                                                                                           |
-| -------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| Unit: domain, stores, loop | 405        | Seeded RNG, race maths, settings normalisation against hostile input, every store action, corrupted and throwing `localStorage` |
-| Components                 | 197        | Mounted against real Pinia stores and driven through their public actions, not mocks                                            |
-| E2E                        | 154        | One test per brief item, flows and edge cases (1×1 to 20×10 days, seeds, persistence, drag and keyboard moves, the tour)        |
-| Accessibility              | inside E2E | axe WCAG 2 A/AA scans with zero violations in five states, light and dark                                                       |
-| Visual                     | inside E2E | Seven screens per device, with a fixed seed and a paused clock                                                                  |
+| Layer                      | Tests      | Notes                                                                                                                                                                                                                        |
+| -------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Unit: domain, stores, loop | 405        | Seeded RNG, race maths, settings normalisation against hostile input, every store action, corrupted and throwing `localStorage`                                                                                              |
+| Components                 | 198        | Mounted against real Pinia stores and driven through their public actions, not mocks                                                                                                                                         |
+| E2E                        | 371        | 77 tests run in Chrome desktop, Chrome on a Pixel 7, Firefox, Safari desktop and Safari on an iPhone 15: one per brief item, flows and edge cases (1×1 to 20×10 days, seeds, persistence, drag and keyboard moves, the tour) |
+| Accessibility              | inside E2E | axe WCAG 2 A/AA scans with zero violations in five states, light and dark                                                                                                                                                    |
+| Visual                     | inside E2E | Seven screens per device, with a fixed seed and a paused clock                                                                                                                                                               |
 
 Vitest coverage: 100% lines and functions, 99.8% statements, 98.8% branches.
 
-Fonts render slightly differently per OS, so visual baselines exist for macOS and for Linux. The Linux ones come from the official Playwright image (`npm run test:visual:linux`), the same image CI runs in. The tests also found six real bugs, all fixed. The most interesting: `Number(null) === 0` was turning "no seed" into seed 0, so every race day after using the setup dialog had the same horses.
+Screenshots are compared in Chrome (desktop and phone) and in Safari on an iPhone. Fonts render slightly differently per OS, so visual baselines exist for macOS and for Linux. The Linux ones come from the official Playwright image (`npm run test:visual:linux`), the same image CI runs in. The tests also found six real bugs, all fixed. The most interesting: `Number(null) === 0` was turning "no seed" into seed 0, so every race day after using the setup dialog had the same horses. Running the suite in Safari turned up two more, also fixed: Safari doesn't focus a clicked button, so Esc on the seed tip closed the whole dialog, and on phones the onboarding spotlight left a stray speck on its centred steps.
 
 ## Performance
 
