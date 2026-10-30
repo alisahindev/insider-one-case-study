@@ -101,8 +101,9 @@ test.describe('Requirements', () => {
       await tick(page, 250)
       const count = await resultTitles(page).count()
       // A result never shows before its round is over, and never lags behind it.
-      expect(count).toBe(await finished.count())
+      await expect(finished).toHaveCount(count)
       if (count === shown) continue
+      // eslint-disable-next-line playwright/prefer-to-have-count -- count is the snapshot read above
       expect(count).toBe(shown + 1) // one at a time, in order
       shown = count
       await settle(page)

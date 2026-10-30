@@ -27,12 +27,7 @@ jobs:
       - name: Format
         run: npx prettier --check src e2e
       - name: Unit and component tests with coverage
-        run: npm run test:coverage -- --coverage.reporter=text --coverage.reporter=html
-      - uses: actions/upload-artifact@v7
-        with:
-          name: coverage
-          path: coverage/
-          retention-days: 14
+        run: npm run test:coverage -- --coverage.reporter=text
       - name: Build
         run: npm run build-only
 
