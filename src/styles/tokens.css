@@ -1,0 +1,60 @@
+/*
+ * Design tokens: the only place raw colours, sizes and timings live.
+ * Components read role tokens (--bg-*, --text-*), never palette hex values.
+ */
+:root {
+  /* Palette: a racecourse seen from the stands */
+  --color-turf: #1f5c3a;
+  --color-turf-stripe: #1b5433;
+  --color-rail: #f7f7f2;
+  --color-board: #14211a;
+  --color-board-raised: #1e3127;
+  --color-brass: #e3c35a;
+
+  /* Roles */
+  --bg-page: #e8ece4;
+  --bg-surface: #ffffff;
+  --bg-subtle: #eef1ec;
+  --text: #14211a;
+  --text-muted: #4a5a50;
+  --border: #d5dcd2;
+  --accent: var(--color-turf);
+  --focus: #2459c9;
+
+  /* Type: one variable family, width carries the hierarchy */
+  --font: 'Archivo Variable', system-ui, sans-serif;
+  --text-xs: 0.6875rem;
+  --text-sm: 0.8125rem;
+  --text-md: 0.875rem;
+  --text-lg: 1rem;
+  --text-display: clamp(1.625rem, 1.1rem + 1.6vw, 2.25rem);
+  --stretch-condensed: 80%;
+  --stretch-wide: 125%;
+
+  /* Space and shape */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-pill: 999px;
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --duration: 220ms;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-page: #0e1712;
+    --bg-surface: #15221b;
+    --bg-subtle: #1b2b22;
+    --text: #e8ece4;
+    --text-muted: #a3b2a8;
+    --border: #2a3d31;
+    --accent: #6cc08f;
+    --focus: #8fb3ff;
+  }
+}

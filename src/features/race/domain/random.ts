@@ -12,8 +12,9 @@ export function createRng(seed: number): Rng {
   }
 }
 
-export function randomSeed(): number {
-  return Math.floor(Math.random() * 2 ** 32)
+/** Six-digit seeds stay short enough to read out and share. */
+export function randomSeed(rng: Rng = Math.random): number {
+  return Math.floor(rng() * 1_000_000)
 }
 
 /** Integer in [min, max], both inclusive. */
