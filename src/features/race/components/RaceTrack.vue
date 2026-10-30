@@ -135,12 +135,18 @@ const summary = computed(() => {
 .track {
   --gate-width: 36px;
   --runoff: clamp(80px, 9vw, 120px);
+  /* A strip above the lanes for pole labels and the to-go/paused chips, so they never cover a horse. */
+  --rail: 44px;
   /* Horses scale with lane height, so 1 lane or 20 lanes both fit. */
-  --figure-width: clamp(34px, calc((100cqh - 16px) / var(--lanes) * 1.35), 96px);
+  --figure-width: clamp(
+    34px,
+    calc((100cqh - var(--rail) - var(--space-2)) / var(--lanes) * 1.35),
+    96px
+  );
 
   position: relative;
   container-type: size;
-  min-height: calc(var(--lanes) * 30px + 16px);
+  min-height: calc(var(--lanes) * 30px + var(--rail) + var(--space-2));
   overflow: hidden;
   border-radius: var(--radius-lg);
   background: repeating-linear-gradient(
@@ -155,7 +161,7 @@ const summary = computed(() => {
   position: absolute;
   inset: 0;
   display: flex;
-  padding: var(--space-2) 0;
+  padding: var(--rail) 0 var(--space-2);
 }
 
 /* The finish line sits where the runoff starts; poles share the same span. */
@@ -177,7 +183,7 @@ const summary = computed(() => {
 
 .pole span {
   position: absolute;
-  top: 6px;
+  top: 14px;
   left: 6px;
   font-size: var(--text-xs);
   font-weight: 600;
@@ -190,10 +196,12 @@ const summary = computed(() => {
   background: repeating-linear-gradient(0deg, #ffffff 0 8px, var(--color-ink) 8px 16px);
 }
 
+/* The inside rail: the top edge of the racing lanes. */
 .lanes {
   display: flex;
   flex: 1;
   flex-direction: column;
+  border-top: 2px solid rgb(255 255 255 / 0.6);
 }
 
 .lane {
@@ -275,7 +283,7 @@ const summary = computed(() => {
 
 .chip {
   position: absolute;
-  top: var(--space-3);
+  top: 6px;
   padding: 6px var(--space-3);
   border-radius: var(--radius-pill);
   background: #ffffff;
@@ -357,7 +365,7 @@ const summary = computed(() => {
 
 @media (max-width: 640px) {
   .track {
-    min-height: calc(var(--lanes) * 40px + 16px);
+    min-height: calc(var(--lanes) * 40px + var(--rail) + var(--space-2));
   }
 
   .pole span {
