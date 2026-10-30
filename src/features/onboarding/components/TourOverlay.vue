@@ -28,7 +28,8 @@ const current = computed(() => TOUR_STEPS[shown.value]!)
 const isFirst = computed(() => shown.value === 0)
 const isLast = computed(() => shown.value === TOUR_STEPS.length - 1)
 const announcement = computed(
-  () => `Step ${shown.value + 1} of ${TOUR_STEPS.length}. ${current.value.title}. ${current.value.body}`,
+  () =>
+    `Step ${shown.value + 1} of ${TOUR_STEPS.length}. ${current.value.title}. ${current.value.body}`,
 )
 
 const hole = ref<Box>({ x: 0, y: 0, width: 0, height: 0 })
