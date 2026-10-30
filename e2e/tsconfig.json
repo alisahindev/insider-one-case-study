@@ -1,4 +1,12 @@
 {
   "extends": "@tsconfig/node24/tsconfig.json",
-  "include": ["./**/*"]
+  "include": ["./**/*"],
+  "compilerOptions": {
+    // Specs run in Node, but page.evaluate callbacks run in the browser: both sets of types.
+    "lib": ["es2024", "dom", "dom.iterable"],
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "types": ["node"],
+    "noEmit": true
+  }
 }
