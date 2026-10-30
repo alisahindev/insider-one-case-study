@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
-import { reload, seedStorage, ui, visit } from './fixtures'
+import { openRaceDay, reload, SEED, seedStorage, tick, ui, visit } from './fixtures'
 
 const DEFAULT = { left: ['Stable'], right: ['Program', 'Results'] }
 
@@ -89,6 +89,7 @@ test('drag a panel by its handle into the other column; it stays there after a r
 
 test('drag a panel into an empty column', async ({ page, isMobile }) => {
   // Phones stack the columns, so the empty one sits a whole stable below; keyboard moves cover it there.
+  // eslint-disable-next-line playwright/no-skipped-test -- intentional, phone layout only
   test.skip(isMobile, 'columns stack on phones')
   await handle(page, 'Stable').focus()
   await page.keyboard.press('ArrowRight') // empties the left column
@@ -177,3 +178,22 @@ test('a damaged saved layout falls back to the default one', async ({ page }) =>
     await expect(resetLayout(page)).toBeHidden()
   }
 })
+
+// A field of 20 needs more height than a short desktop screen gives the track:
+// the middle column scrolls instead of the track spilling over the live standings.
+for (const viewport of [
+  { width: 1440, height: 900 },
+  { width: 1280, height: 720 },
+]) {
+  test(`a full field of 20 never covers the live standings at ${viewport.width}×${viewport.height}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(viewport)
+    await openRaceDay(page, `/?seed=${SEED}&horses=20&perRound=20`)
+    await ui(page).start.click()
+    await tick(page, 4000)
+    const track = (await page.locator('.track').boundingBox())!
+    const standings = (await page.getByRole('region', { name: 'Live standings' }).boundingBox())!
+    expect(track.y + track.height).toBeLessThanOrEqual(standings.y)
+  })
+}

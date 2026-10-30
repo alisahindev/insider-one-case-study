@@ -59,7 +59,8 @@ const COLUMNS: Column[] = ['left', 'right']
     </header>
 
     <main class="app-main">
-      <section class="race" aria-label="Race">
+      <!-- Focusable because it can scroll (big fields on short screens). -->
+      <section class="race" aria-label="Race" tabindex="0">
         <RaceHeader />
         <RaceTrack data-tour="track" />
         <LiveStandings data-tour="standings" />
@@ -76,7 +77,7 @@ const COLUMNS: Column[] = ['left', 'right']
         fallback-class="panel-drag"
         :force-fallback="true"
         :animation="200"
-        :data-empty-label="'Drop a panel here'"
+        data-empty-label="Drop a panel here"
       >
         <component
           :is="PANEL_COMPONENTS[id]"
@@ -267,8 +268,10 @@ const COLUMNS: Column[] = ['left', 'right']
     min-height: 0;
   }
 
+  /* The track keeps its minimum lane height; a big field or a short screen scrolls the middle column. */
   .race {
-    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-rows: auto 1fr auto;
+    overflow-y: auto;
   }
 
   .column > :deep(.panel) {
