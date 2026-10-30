@@ -13,7 +13,8 @@ const hasLiveRound = computed(() => race.status === 'racing' || race.status === 
     <h2 id="stable-title" class="panel__title">
       Stable <small>{{ race.horses.length }} horses</small>
     </h2>
-    <div class="scroll">
+    <!-- Focusable so keyboard users can scroll the list too. -->
+    <div class="scroll" tabindex="0" aria-labelledby="stable-title">
       <table class="horses">
         <thead>
           <tr>
@@ -84,12 +85,14 @@ td {
   border-top: 1px solid var(--bg-subtle);
 }
 
-tr {
-  transition: opacity var(--duration) var(--ease-out);
+/* Resting horses fade their silk and soften their text, but text stays above AA contrast. */
+.resting {
+  color: var(--text-muted);
 }
 
-tr.resting {
-  opacity: 0.45;
+.resting :deep(.silk),
+.resting meter {
+  opacity: 0.4;
 }
 
 .horse {
